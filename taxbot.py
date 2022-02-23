@@ -1,8 +1,5 @@
 import os
-import shutil
-import win32com.client
 import fitz
-from pathlib import Path
 from PyPDF2 import PdfFileWriter, PdfFileReader
 
 from automation import Automation
@@ -19,9 +16,8 @@ class TaxBot(Automation):
 
         # while not self.check_for_00_form():
         #     return
-        
-        self.read_out_pdf()
-        return
+
+        # self.read_out_pdf()
 
         # 0. Read in the pdf and set the name variables ####
         first_name, last_name, sin, email = self.read_taxprep_pdf()
@@ -55,25 +51,27 @@ class TaxBot(Automation):
         # files = [file_1, file_2, file_3]
 
         files = self.get_matching_files(file_name)
-        self.move_pdfs(self.source_path, destination_path, files)
+        self.move_files(self.source_path, destination_path, files)
 
         # 3. Decrypt the letter pdf and extract the information
-        # letter_name = f"_1-Ltr_{year}.pdf"
-        letter_name = file_name + f"_2-T1_({city})_{year -1}.pdf"
-        print(letter_name)
+        letter_name = file_name + f"_1-Ltr_{year-1}.pdf"
+        # letter_name = file_name + f"_2-T1_({city})_{year -1}.pdf"
+
         self.decrypt_pdf(destination_path, letter_name, sin_pw)
 
-        return
+        partner, total = self.get_letter_info(destination_path, letter_name)
+        partner_email = self.get_partner_email(partner)
 
         # 3. Send the email with attachments
         to_address = "david.watson@bakertillywm.com"
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = '<h3>This is HTML Body</h3>'
-        body = f"email to send to {email} \n\n" \
+        body = f"Send to {email} from {partner_email}\n\n" \
                "Dear Kimberly,\n\n" \
-               "Please find attached your tax return report \n \n" \
+               f"Please find attached your tax return report. The total amount owing is {total}\n\n" \
                "Kind Regards"
-
+        print(body)
+        return
         self.send_email(to_address=to_address,
                         subject=subject,
                         html_body=html_body,
@@ -83,25 +81,6 @@ class TaxBot(Automation):
                         )
         print("email sent")
         return
-
-    @staticmethod
-    def move_pdfs(path, destination, files):
-        for file in files:
-            shutil.move(os.path.join(path, file), destination)
-
-    @staticmethod
-    def send_email(**kwargs):
-
-        outlook = win32com.client.Dispatch('outlook.application')
-        mail = outlook.CreateItem(0)
-
-        mail.To = kwargs["to_address"]
-        mail.Subject = kwargs['subject']
-        # mail.HTMLBody = kwargs['html_body']
-        mail.Body = kwargs['body']
-        for attachment in kwargs["attachment_files"]:
-            mail.Attachments.Add(kwargs["attachment_file_path"] + "/" + attachment)
-        mail.Send()
 
     def read_taxprep_pdf(self):
         with fitz.open(self.source_path + "/00-Taxprep-Holman, Kim.pdf") as doc:
@@ -128,14 +107,8 @@ class TaxBot(Automation):
                 text += page.getText()
 
         text_list = text.split("\n")
-        # first_name = text_list[29]
-        # last_name = text_list[30]
-        # sin = text_list[31]
-        # email = text_list[108]
         for idx, line in enumerate(text_list):
             print(f"{idx}: {line}")
-
-        # print(f"{first_name}, {last_name}: {sin}, {email}")
 
         return
 
@@ -155,26 +128,6 @@ class TaxBot(Automation):
             return False, None
 
         return path, city
-
-    @staticmethod
-    def check_directory(directory, path_to_check):
-        """ Checks if the folder/file exists in the directory"""
-        for folder in os.listdir(directory):
-            if folder.startswith(path_to_check):
-                return folder
-        return False
-
-    @staticmethod
-    def create_directory(directory):
-        Path(directory).mkdir(parents=True, exist_ok=True)
-
-    def get_matching_files(self, matching_string):
-        files = []
-        for file in os.listdir(self.source_path):
-            if file.startswith(matching_string):
-                files.append(file)
-
-        return files
 
     def decrypt_pdf(self, path, file, password):
 
@@ -202,6 +155,32 @@ class TaxBot(Automation):
             print("File decrypted Successfully.")
         else:
             print("File already decrypted.")
+
+    @staticmethod
+    def get_letter_info(destination_path, letter_name):
+        with fitz.open(f"{destination_path}/{letter_name}") as doc:
+            text = ""
+            for page in doc:
+                text += page.getText()
+
+        text_list = text.split("\n")
+        for idx, line in enumerate(text_list):
+            print(f"{idx}: {line}")
+        total_amount = text_list[51]
+        partner_line = text_list[65].split(' ')
+        print(partner_line)
+        partner = f"{partner_line[1]} {partner_line[2].replace(',','')}"
+        print(partner)
+
+        return partner, total_amount
+
+    @staticmethod
+    def get_partner_email(partner):
+
+        # set up a read table here:
+        if partner == "John Sinclair":
+            return 'John.Sinclair@bakertillywm.com'
+
 
 # ToDo Test the pdf decrypter
 # ToDo Read and get the statement information from the letter
