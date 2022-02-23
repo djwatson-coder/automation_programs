@@ -1,7 +1,9 @@
 import os
+import time
+
 import fitz
 from PyPDF2 import PdfFileWriter, PdfFileReader
-
+from pikepdf import Pdf
 from automation import Automation
 
 
@@ -11,19 +13,31 @@ class TaxBot(Automation):
 
         # Source Path should be static
         self.source_path = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test"
+        #self.source_path = "L:\Toronto\T1\T1-2020\PDF"
+        #self.source_path =
+
+        # This should be a csv/text file that's written to but not cleared
+        self.already_completed = []
 
     def run(self):
 
-        # while not self.check_for_00_form():
-        #     return
+        ready_to_start = False
+        while True:
+            ready_to_start, file_00_path = self.check_input_folder()
+            if ready_to_start:
+                self.run_process(file_00_path)
+                break  # for now - remove when wanting to run multiple
+            else:
+                # wait 60 seconds
+                time.sleep(60)
 
-        # self.read_out_pdf()
+    def run_process(self, document_00):
 
         # 0. Read in the pdf and set the name variables ####
         first_name, last_name, sin, email = self.read_taxprep_pdf()
 
         sin = sin.replace(' ', '')
-        sin_pw = sin[:-4]  # last 4 digits
+        sin_pw = sin
         file_name = f"{last_name}_{first_name.replace(' ', '_')}"
         last_init = last_name[0]
         client_folder_path = f"{last_name}, {first_name.split(' ')[0]}"
@@ -54,7 +68,7 @@ class TaxBot(Automation):
         self.move_files(self.source_path, destination_path, files)
 
         # 3. Decrypt the letter pdf and extract the information
-        letter_name = file_name + f"_1-Ltr_{year-1}.pdf"
+        letter_name = file_name + f"_1-Ltr_{year - 1}.pdf"
         # letter_name = file_name + f"_2-T1_({city})_{year -1}.pdf"
 
         self.decrypt_pdf(destination_path, letter_name, sin_pw)
@@ -62,8 +76,11 @@ class TaxBot(Automation):
         partner, total = self.get_letter_info(destination_path, letter_name)
         partner_email = self.get_partner_email(partner)
 
+        return
+
         # 3. Send the email with attachments
         to_address = "david.watson@bakertillywm.com"
+        # to_address = "deepak.upadhyaya@bakertillywm.com"
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = '<h3>This is HTML Body</h3>'
         body = f"Send to {email} from {partner_email}\n\n" \
@@ -71,7 +88,7 @@ class TaxBot(Automation):
                f"Please find attached your tax return report. The total amount owing is {total}\n\n" \
                "Kind Regards"
         print(body)
-        return
+
         self.send_email(to_address=to_address,
                         subject=subject,
                         html_body=html_body,
@@ -80,10 +97,11 @@ class TaxBot(Automation):
                         attachment_file_path=destination_path
                         )
         print("email sent")
+
         return
 
     def read_taxprep_pdf(self):
-        with fitz.open(self.source_path + "/00-Taxprep-Holman, Kim.pdf") as doc:
+        with fitz.open(f"{self.source_path}/{'00-Taxprep-Holman, Kim.pdf'}") as doc:
             text = ""
             for page in doc:
                 text += page.getText()
@@ -93,8 +111,8 @@ class TaxBot(Automation):
         last_name = text_list[30]
         sin = text_list[31]
         email = text_list[108]
-        # for idx, line in enumerate(text_list):
-        #    print(f"{idx}: {line}")
+        for idx, line in enumerate(text_list):
+            print(f"{idx}: {line}")
         print(f"{first_name}, {last_name}: {sin}, {email}")
 
         return first_name, last_name, sin, email
@@ -136,21 +154,26 @@ class TaxBot(Automation):
             print("No Cover Letter Found")
             return
 
-        file = PdfFileReader(f"{path}/{file}")
+        pdf_file = PdfFileReader(f"{path}/{file}")
 
         # Check if the opened file is actually Encrypted
-        if file.isEncrypted:
+        if pdf_file.isEncrypted:
+            print(password)
 
-            file.decrypt(password)
-            for idx in range(file.numPages):
-                page = file.getPage(idx)
-                out.addPage(page)
+            with Pdf.open(f"{path}/{file}", password=password, allow_overwriting_input=True) as pdf:
+                pdf.save(f"{path}/{file}")
 
+            # pdf_file = PdfFileReader(f"{path}/{file}")
+            #
+            # for idx in range(file.numPages):
+            #    page = file.getPage(idx)
+            #    out.addPage(page)
+            #
             # remove the file
-            os.remove(f"{path}/{file}")
-
-            with open(f"{path}/{file}", "wb") as f:
-                out.write(f)
+            # os.remove(f"{path}/{file}")
+            #
+            # with open(f"{path}/{file}", "wb") as f:
+            #    out.write(f)
 
             print("File decrypted Successfully.")
         else:
@@ -181,6 +204,15 @@ class TaxBot(Automation):
         if partner == "John Sinclair":
             return 'John.Sinclair@bakertillywm.com'
 
+    def check_input_folder(self, matching_string = "00"):
+        files = self.check_directory(matching_string)
+        if len(files) == 0:
+            return False
+        else:
+            return True
+            # take the first file and
+        return True
 
-# ToDo Test the pdf decrypter
-# ToDo Read and get the statement information from the letter
+# ToDo Test the pdf decrypter with the full SIN
+# ToDo Create partner lookup table
+# ToDo Add client ID to the folder name
