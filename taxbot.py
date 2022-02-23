@@ -1,6 +1,6 @@
 import os
 import time
-
+import re
 import fitz
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from pikepdf import Pdf
@@ -21,11 +21,14 @@ class TaxBot(Automation):
 
     def run(self):
 
-        ready_to_start = False
         while True:
-            ready_to_start, file_00_path = self.check_input_folder()
-            if ready_to_start:
-                self.run_process(file_00_path)
+            file_path = self.check_input_folder("00")
+            if file_path:
+                file = file_path[1]
+                if not self.run_process(file):
+                    return
+                else:
+                    self.already_completed.append(file)
                 break  # for now - remove when wanting to run multiple
             else:
                 # wait 60 seconds
@@ -34,7 +37,9 @@ class TaxBot(Automation):
     def run_process(self, document_00):
 
         # 0. Read in the pdf and set the name variables ####
-        first_name, last_name, sin, email = self.read_taxprep_pdf()
+        first_name, last_name, sin, email = self.read_taxprep_pdf(document_00)
+
+        return False
 
         sin = sin.replace(' ', '')
         sin_pw = sin
@@ -56,6 +61,7 @@ class TaxBot(Automation):
         print(f"Destination path successfully found for {client_folder_path}")
         # self.destination_path = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder"
         # self.destination_path = "I:/Toronto/_Personal Tax - TOR/H/Holman, Kimberly_94214/2020/CRA"
+        return False
 
         # 2. move the pdf files ####
 
@@ -100,19 +106,30 @@ class TaxBot(Automation):
 
         return
 
-    def read_taxprep_pdf(self):
-        with fitz.open(f"{self.source_path}/{'00-Taxprep-Holman, Kim.pdf'}") as doc:
+    def read_taxprep_pdf(self, document_00):
+        with fitz.open(f"{self.source_path}/{document_00}") as doc:
             text = ""
             for page in doc:
                 text += page.getText()
 
         text_list = text.split("\n")
-        first_name = text_list[29]
-        last_name = text_list[30]
-        sin = text_list[31]
-        email = text_list[108]
+
+        sin_place = 0
+        email_place = 0
         for idx, line in enumerate(text_list):
             print(f"{idx}: {line}")
+            if self.sin_match(line) and sin_place == 0:
+                sin_place = idx
+            if self.email_match(line) and email_place == 0:
+                email_place = idx
+
+        sin = text_list[sin_place]
+        first_name = text_list[sin_place-2]
+        last_name = text_list[sin_place-1]
+        email = text_list[email_place]
+        if email_place == 0:
+            email = "No Email"
+
         print(f"{first_name}, {last_name}: {sin}, {email}")
 
         return first_name, last_name, sin, email
@@ -163,18 +180,6 @@ class TaxBot(Automation):
             with Pdf.open(f"{path}/{file}", password=password, allow_overwriting_input=True) as pdf:
                 pdf.save(f"{path}/{file}")
 
-            # pdf_file = PdfFileReader(f"{path}/{file}")
-            #
-            # for idx in range(file.numPages):
-            #    page = file.getPage(idx)
-            #    out.addPage(page)
-            #
-            # remove the file
-            # os.remove(f"{path}/{file}")
-            #
-            # with open(f"{path}/{file}", "wb") as f:
-            #    out.write(f)
-
             print("File decrypted Successfully.")
         else:
             print("File already decrypted.")
@@ -204,14 +209,28 @@ class TaxBot(Automation):
         if partner == "John Sinclair":
             return 'John.Sinclair@bakertillywm.com'
 
-    def check_input_folder(self, matching_string = "00"):
-        files = self.check_directory(matching_string)
+    def check_input_folder(self, matching_string="00"):
+        files = self.get_matching_files(matching_string)
+        files_to_process = []
+
+        for file in files:
+            if file not in self.already_completed:
+                files_to_process.append(file)
+
         if len(files) == 0:
             return False
         else:
-            return True
-            # take the first file and
-        return True
+            return files
+    @staticmethod
+    def sin_match(item):
+        pattern = re.compile("[0-9]{3} [0-9]{3} [0-9]{3}")
+        return pattern.match(item)
+
+    @staticmethod
+    def email_match(item):
+        pattern = re.compile("[0-z]*@[0-z]*(.com)")
+        return pattern.match(item)
+
 
 # ToDo Test the pdf decrypter with the full SIN
 # ToDo Create partner lookup table
