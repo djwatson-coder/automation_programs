@@ -1,7 +1,9 @@
 import time
+from datetime import datetime
 from PyPDF2 import PdfFileWriter, PdfFileReader
 from pikepdf import Pdf
 from automation import Automation
+import pickle
 
 
 class TaxBot(Automation):
@@ -20,8 +22,7 @@ class TaxBot(Automation):
         self.toronto_personal_client_dir = "I:/Toronto/_Personal Tax - TOR"
         self.vancouver_personal_client_dir = "I:/Vancouver/_Personal Tax - VAN"
 
-        # This should be a csv/text file that's written to but not cleared
-        self.completed_entities = []
+        self.completed_entities = [] # stored in a pickle file
         self.tax_prep_string = "00"
 
     def run(self):
@@ -31,17 +32,34 @@ class TaxBot(Automation):
         :return: None
         :rtype: None
         """
-        while True:
-            file = self.check_input_folder(self.tax_prep_string)
-            if file:
-                print("################### BEGIN TAXBOT PROCESS ###################")
-                print(f"File Found: {file}")
-                if self.run_process(file):
-                    self.completed_entities.append(file)
-                    print("#################################################################")
-            else:
-                # wait 60 seconds
-                time.sleep(60)
+        infile = open("sample.pkl", 'rb')
+        self.completed_entities = pickle.load(infile)
+        infile.close()
+        outfile = open("sample.pkl", 'wb')
+
+        try:
+            while True:
+                file = self.check_input_folder(self.tax_prep_string)
+                if file:
+                    print("################### BEGIN TAXBOT PROCESS ###################")
+                    print(f"File Found: {file}")
+                    if self.run_process(file):
+                        self.completed_entities.append(file)
+                        print("#################################################################")
+                else:
+                    # wait 60 seconds
+                    print("No New Tax Prep Documents to process")
+                    print(f"Completed Ones: {self.completed_entities}")
+                    slp = 30
+                    print(f"sleeping for {slp} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                    time.sleep(30)
+
+        except KeyboardInterrupt or Exception:
+            pickle.dump(self.completed_entities, outfile)
+            outfile.close()
+            raise
+
+
 
 
 
@@ -96,7 +114,8 @@ class TaxBot(Automation):
                         send=False)
 
         print("EMAIL SENT TO:")
-        print(f"    Partner: {partner} at: {partner.replace(' ', '.').lower() + email_string}")
+        print(f"    Partner: {partner} \n"
+              f"    Email: {partner.replace(' ', '.').lower() + email_string}")
         print(f"Process Complete for: {first_name} {last_name}")
 
 
@@ -187,13 +206,8 @@ class TaxBot(Automation):
             return files_to_process[0]
 
 
-
-
-
-# ToDo Test the pdf decrypter with the full SIN
-# ToDo Create partner lookup table
 # ToDo Add client ID to the folder name
 # ToDo robustness checks and exception handling
-# ToDo get the accurate place of the partner and amounts in the letter
+# ToDo get the accurate place of amounts in the letter
 # ToDo find the dependencies through print to send an email only to the first name
 
