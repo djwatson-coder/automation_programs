@@ -25,54 +25,53 @@ class TaxBot(Automation):
         self.completed_entities = [] # stored in a pickle file
         self.tax_prep_string = "00"
 
-    def run(self):
+        self.slp = 30
+
+    def run(self, store=True):
         """
         Checks the folder to see if there are any tax prep files that have not been stored and sent.
         If there are any it runs the storing and sending process.
         :return: None
         :rtype: None
         """
-        infile = open("sample.pkl", 'rb')
-        self.completed_entities = pickle.load(infile)
-        infile.close()
-        outfile = open("sample.pkl", 'wb')
+        if store:
+            infile = open("sample.pkl", 'rb')
+            self.completed_entities = pickle.load(infile)
+            infile.close()
+            outfile = open("sample.pkl", 'wb')
 
         try:
             while True:
                 file = self.check_input_folder(self.tax_prep_string)
                 if file:
-                    print("################### BEGIN TAXBOT PROCESS ###################")
+                    self.print_hash_comment("Begin taxbot process")
                     print(f"File Found: {file}")
                     if self.run_process(file):
                         self.completed_entities.append(file)
-                        print("#################################################################")
+                        self.print_hash_comment("#####")
                 else:
                     # wait 60 seconds
                     print("No New Tax Prep Documents to process")
                     print(f"Completed Ones: {self.completed_entities}")
-                    slp = 30
-                    print(f"sleeping for {slp} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+                    print(f"sleeping for {self.slp} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
                     time.sleep(30)
 
         except KeyboardInterrupt or Exception:
-            pickle.dump(self.completed_entities, outfile)
-            outfile.close()
+            if store:
+                pickle.dump(self.completed_entities, outfile)
+                outfile.close()
             raise
-
-
-
-
 
     def run_process(self, document_00):
 
         # 0. Read in the pdf and set the name variables ####
-        first_name, last_name, sin, email = self.read_taxprep_pdf(document_00)
+        first_name, last_name, sin, email, client_code = self.read_taxprep_pdf(document_00)
 
         sin = sin.replace(' ', '')
         sin_pw = sin
         file_name = f"{last_name}_{first_name.replace(' ', '_')}"
         last_init = last_name[0]
-        client_folder_path = f"{last_name}, {first_name.split(' ')[0]}"
+        client_folder_path = f"{last_name}, {first_name.split(' ')[0]}_{client_code}"
         year = 2021
         output_folder = "_FINAL T1 DOCS"
 
@@ -80,7 +79,7 @@ class TaxBot(Automation):
         destination_path, city = self.select_directory(client_folder_path, year, last_init, output_folder)
         if not destination_path:
             print(f"Can't find the directory for {client_folder_path}")
-            return
+            return False
 
         print(f"Destination path successfully found for {client_folder_path}")
 
@@ -118,7 +117,6 @@ class TaxBot(Automation):
               f"    Email: {partner.replace(' ', '.').lower() + email_string}")
         print(f"Process Complete for: {first_name} {last_name}")
 
-
         return True
 
     def read_taxprep_pdf(self, document_00):
@@ -127,16 +125,21 @@ class TaxBot(Automation):
         # self.read_out_pdf_list(text_list)
         sin_place, sin = self.find_first_pattern(text_list, "[0-9]{3} [0-9]{3} [0-9]{3}")
         email_place, email = self.find_first_pattern(text_list, "[0-z]*@[0-z]*(.com)")
+        client_code_place, client_code = self.find_first_pattern(text_list, "Client code")
+        client_code = text_list[client_code_place + 3]
         if email_place == 0:
             email = "No Email"
+        if client_code_place == 0:
+            client_code = ""
         first_name = text_list[sin_place - 2]
         last_name = text_list[sin_place - 1]
 
         print(f"    Name:{first_name} {last_name}\n"
               f"    SIN: {sin}\n"
+              f"    Client Code: {client_code}\n"
               f"    Email: {email}")
 
-        return first_name, last_name, sin, email
+        return first_name, last_name, sin, email, client_code
 
     def select_directory(self, path_name, year, last_init, folder):
 
@@ -210,4 +213,5 @@ class TaxBot(Automation):
 # ToDo robustness checks and exception handling
 # ToDo get the accurate place of amounts in the letter
 # ToDo find the dependencies through print to send an email only to the first name
-
+# ToDO Handle the triaging of fuzzy, no-option and 1 options better between TOR and VAN so the user is only asked
+#  for input when necessary
