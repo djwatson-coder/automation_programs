@@ -1,10 +1,8 @@
 
-from settings import automation_program, run_type, selection_points
+from settings import automation_program, run_type
 from taxbot import TaxBot
 from folderdataentry import FolderDataEntry
-import keymouse
-import folderdataentry
-
+from tbot import TaxBotTesting
 
 # Select the automation_Script to Run
 def main():
@@ -22,9 +20,9 @@ def main():
 
 
 if __name__ == '__main__':
-    if  run_type == "sel_extract":
-        km = keymouse.KeyMouse()
-        km.click_coordinates(selection_points)
+    if run_type == "testing":
+        testing = TaxBotTesting()
+        testing.test_something()
     else:
         main()
 
