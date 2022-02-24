@@ -1,3 +1,4 @@
+import math
 import os
 import re
 from pathlib import Path
@@ -22,8 +23,7 @@ class Automation:
                 return folder
         return False
 
-    @staticmethod
-    def fuzzy_check_directory(directory, path_to_check):
+    def fuzzy_check_directory(self, directory, path_to_check):
         """ Checks if the folder/file exists in the directory,
             if there are multiple it asks which to use,
             if not exact match it gives an option to use another close one"""
@@ -43,7 +43,8 @@ class Automation:
 
             if len(close_matches) == 0:
                 return False
-            print("################### FUZZY MATCH INPUT NEEDED ###################")
+
+            self.print_hash_comment("fuzzy match input needed")
             for idx, c_match in enumerate(close_matches):
                 print(f"{idx + 1}: {c_match}")
             response = int(input("No exact Match, would you like to select one of the 3 above options? \n"
@@ -52,7 +53,7 @@ class Automation:
                                  "  2 - Second match\n"
                                  "  3 - Third match\n"
                                  "Enter Here:  "))
-            print("#################################################################")
+            self.print_hash_comment("####")
             if response == 0:
                 return False
             else:
@@ -137,3 +138,10 @@ class Automation:
             if pattern.match(line):
                 # print(f"{idx}: {line}")
                 return idx, line
+        return 0, False
+
+    @staticmethod
+    def print_hash_comment(text):
+        text_length = len(text) + 2
+        hash_length = math.floor((80 - text_length)/2)
+        print(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
