@@ -15,7 +15,7 @@ def main():
 
     if automation_program == "TaxBot":
         bot = TaxBot()
-        bot.run()
+        bot.run(False)
 
     return
 
