@@ -6,6 +6,8 @@ import shutil
 import win32com.client
 import fitz
 import difflib
+from PyPDF2 import PdfFileReader
+from pikepdf import Pdf
 
 
 class Automation:
@@ -23,7 +25,8 @@ class Automation:
                 return folder
         return False
 
-    def fuzzy_check_directory(self, directory, path_to_check):
+    @staticmethod
+    def fuzzy_check_directory(directory, path_to_check, extra_info=""):
         """ Checks if the folder/file exists in the directory,
             if there are multiple it asks which to use,
             if not exact match it gives an option to use another close one"""
@@ -31,50 +34,14 @@ class Automation:
         options = []
         for folder in os.listdir(directory):
             if folder.startswith(path_to_check):
-                options.append(folder)
+                options.append(f"{extra_info}{folder}")
 
-        # Exact Match
-        if len(options) == 1:
-            return options[0]
+        close_matches = difflib.get_close_matches(path_to_check, os.listdir(directory))
+        for idx in range(len(close_matches)):
+            close_matches[idx] = f"{extra_info}{close_matches[idx]}"
 
-        # No Matches
-        if len(options) == 0:
-            close_matches = difflib.get_close_matches(path_to_check, os.listdir(directory))
+        return options, close_matches
 
-            if len(close_matches) == 0:
-                return False
-
-            self.print_hash_comment("fuzzy match input needed")
-            for idx, c_match in enumerate(close_matches):
-                print(f"{idx + 1}: {c_match}")
-            response = int(input("No exact Match, would you like to select one of the 3 above options? \n"
-                                 "  0 - None (stop the bot)\n"
-                                 "  1 - First match\n"
-                                 "  2 - Second match\n"
-                                 "  3 - Third match\n"
-                                 "Enter Here:  "))
-            self.print_hash_comment("####")
-            if response == 0:
-                return False
-            else:
-                return close_matches[response - 1]
-
-        # Multiple Matches
-        if len(options) > 0:
-            for idx, o_match in enumerate(options):
-                print(f"{idx + 1}: {o_match}")
-            response = int(input("Multiple Options, would you like to select one of the above options? \n"
-                                 "0 - None (stop the bot)\n"
-                                 "1 - First match\n"
-                                 "2 - Second match\n"
-                                 "3 - Third match etc.\n"
-                                 "Enter Here:  "))
-            if response == 0:
-                return False
-            else:
-                return options[response - 1]
-
-        return False
 
     @staticmethod
     def create_directory(directory):
@@ -82,25 +49,22 @@ class Automation:
 
     def get_matching_files(self, matching_string):
 
-        # file_1 = file_name + f"_1-Ltr_{year}.pdf"
-        # file_2 = file_name + f"_2-T1_({city})_{year}.pdf"
-        # file_3 = file_name + f"_3-Docs_Needing_Signature_{year}.pdf"
-        # files = [file_1, file_2, file_3]
-
         files = []
         for file in os.listdir(self.source_path):
-            if file.startswith(matching_string):
+            if matching_string in file:
                 files.append(file)
 
         return files
 
     @staticmethod
-    def move_files(path, destination, files):
+    def move_files(path, destination, files, remove=False):
         for file in files:
             if os.path.isfile(f"{destination}/{file}"):
                 os.remove(f"{destination}/{file}")
-            # shutil.move(os.path.join(path, file), destination)
-            shutil.copy(os.path.join(path, file), destination)
+            if remove:
+                shutil.move(os.path.join(path, file), destination)
+            else:
+                shutil.copy(os.path.join(path, file), destination)
 
     @staticmethod
     def send_email(**kwargs):
@@ -130,6 +94,23 @@ class Automation:
                 text += page.get_text()
 
         return text.split("\n")
+
+    def decrypt_pdf(self, path, file, password):
+
+        if not self.check_directory(path, file):
+            raise NotADirectoryError(f"No File Path for the client at :\n{path}/{file}")
+
+        pdf_file = PdfFileReader(f"{path}/{file}")
+
+        # Check if the opened file is actually Encrypted
+        if pdf_file.isEncrypted:
+
+            with Pdf.open(f"{path}/{file}", password=password, allow_overwriting_input=True) as pdf:
+                pdf.save(f"{path}/{file}")
+
+            print("File decrypted Successfully.")
+        else:
+            print("File already decrypted.")
 
     @staticmethod
     def find_first_pattern(text_list, pattern):
