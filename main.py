@@ -1,8 +1,8 @@
 
 from settings import automation_program, run_type
-from taxbot import TaxBot
+from taxbot.taxbot import TaxBot
 from folderdataentry import FolderDataEntry
-from tbot import TaxBotTesting
+from taxbot.tbot import TaxBotTesting
 import pickle
 
 
@@ -20,18 +20,22 @@ def main():
     return
 
 
+def create_pickle():
+    outfile = open("sample.pkl", 'wb')
+    pickle.dump([], outfile)
+    outfile.close()
+
+
 if __name__ == '__main__':
     if run_type == "testing":
         testing = TaxBotTesting()
         testing.test_something()
     else:
-        #outfile = open("sample.pkl", 'wb')
-        #pickle.dump([], outfile)
-        #outfile.close()
+        # create_pickle()
         main()
 
 
 
-# Create access to mouse click
-# Create access to keyboard
-# Create ability to read in Excel files
+# ToDo Create access to mouse click
+# ToDo Create access to keyboard
+# ToDo Create ability to read in Excel files
