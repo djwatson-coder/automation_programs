@@ -28,7 +28,7 @@ class Automation:
     @staticmethod
     def fuzzy_check_directory(directory, path_to_check, extra_info=""):
         """ Checks if the folder/file exists in the directory,
-            if there are multiple it asks which to use,
+            if there are multiple possible files it asks which to use,
             if not exact match it gives an option to use another close one"""
 
         options = []
@@ -47,10 +47,10 @@ class Automation:
     def create_directory(directory):
         Path(directory).mkdir(parents=True, exist_ok=True)
 
-    def get_matching_files(self, matching_string):
+    def get_matching_files(self, path, matching_string):
 
         files = []
-        for file in os.listdir(self.source_path):
+        for file in os.listdir(path):
             if matching_string in file:
                 files.append(file)
 
