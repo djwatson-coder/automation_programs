@@ -1,3 +1,13 @@
+
+# Implement before Deployment
+# ToDo robustness checks and exception handling - map out different errors that can happen and how to deal with them
+# ToDo Change the pickle file to a csv file
+# ToDo Add writing to the csv file after every employee has been completed (not on error)
+# ToDo find the dependencies through print to send an email only to the first name - if there is one
+# ToDo test on 10 Random Samples
+# Nice to have
+# ToDo implement at GUI to replace the console
+
 import time
 from datetime import datetime
 from automation import Automation
@@ -7,7 +17,7 @@ from tbsettings import *
 
 class TaxBot(Automation):
     """
-    Tax Bot Takes Personal Tax Files, stores the releveant files in the correct client location and
+    Tax Bot Takes Personal Tax Files, stores the relevant files in the correct client location and
     sends an email to the Client partner with the attachments and formatted message to the client.
     """
     def __init__(self):
@@ -92,7 +102,7 @@ class TaxBot(Automation):
         print(f"Destination path successfully found for {first_name} {last_name}")
 
         # 2. move the pdf files ####
-        files = self.get_matching_files(file_name)
+        files = self.get_matching_files(self.source_path, file_name)
         if len(files) == 0:
             print(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
             return False
@@ -226,7 +236,7 @@ class TaxBot(Automation):
         return letter_info
 
     def check_input_folder(self, matching_string="00"):
-        files = self.get_matching_files(matching_string)
+        files = self.get_matching_files(self.source_path, matching_string)
         files_to_process = []
 
         for file in files:
@@ -244,8 +254,3 @@ class TaxBot(Automation):
         # find the files based on the name
 
 
-# ToDo robustness checks and exception handling - map out different errors that can happen and how to deal with them
-# ToDo Add writing to the pickle after every employee has been completed (not on error)
-
-# ToDo find the dependencies through print to send an email only to the first name - if there is one
-# ToDo test on 10 Random Samples
