@@ -10,13 +10,17 @@ vancouver_personal_client_dir = "I:/Vancouver/_Personal Tax - VAN"
 
 
 completed_entities = []  # stored in an Excel file after each iteration
+store = False
+
 tax_prep_string = "00_"
+output_folder = "_FINAL T1 DOCS"
+year = 2021
 
 slp = 30  # length of time to sleep for
 remove_files = True  # Remove the files from the source directory
 
 
 # Email Settings
-enable_emailing = False
+enable_emailing = True
 email_partner = False
 email_string = "@bakertillywm.com"
