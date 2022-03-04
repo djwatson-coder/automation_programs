@@ -1,8 +1,8 @@
 
 from settings import automation_program, run_type
-from taxbot.taxbot import TaxBot
+from taxbotfiles.taxbot import TaxBot
 from folderdataentry import FolderDataEntry
-from taxbot.tbot import TaxBotTesting
+from taxbotfiles.tbot import TaxBotTesting
 import pickle
 
 
@@ -15,7 +15,7 @@ def main():
 
     if automation_program == "TaxBot":
         bot = TaxBot()
-        bot.run(False)
+        bot.run()
 
     return
 
