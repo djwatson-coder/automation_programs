@@ -97,7 +97,7 @@ class TaxBot(Automation):
         client_folder_path = f"{last_name}, {first_name.split(' ')[0]}_{client_code}"
 
         # 1. Create destination path: ####
-        destination_path, city = self.select_directory(client_folder_path, self.year, last_init, self.output_folder)
+        destination_path, city = self.select_directory(client_folder_path, self.year+2, last_init, self.output_folder)
         if not destination_path:
             print(f"Can't find the directory for {client_folder_path}")
             return False
