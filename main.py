@@ -3,6 +3,7 @@ from settings import automation_program, run_type
 from taxbotfiles.taxbot import TaxBot
 from folderdataentry import FolderDataEntry
 from taxbotfiles.tbot import TaxBotTesting
+from taxbotfiles.gui import GUI
 import pickle
 
 
@@ -27,6 +28,7 @@ def create_pickle():
 
 
 if __name__ == '__main__':
+
     if run_type == "testing":
         testing = TaxBotTesting()
         testing.test_something()
