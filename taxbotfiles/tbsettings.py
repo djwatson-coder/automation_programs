@@ -17,10 +17,10 @@ output_folder = "_FINAL T1 DOCS"
 year = 2021
 
 slp = 30  # length of time to sleep for
-remove_files = True  # Remove the files from the source directory
-
+remove_files = False  # Remove the files from the source directory
+take_first_selection = True  # Takes the first folder selection instead of asking for user input
 
 # Email Settings
-enable_emailing = True
+enable_emailing = False
 email_partner = False
 email_string = "@bakertillywm.com"
