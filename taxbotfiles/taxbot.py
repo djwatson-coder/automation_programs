@@ -13,7 +13,8 @@ from datetime import datetime
 from automation import Automation
 import pickle
 from taxbotfiles.tbsettings import *
-
+from taxbotfiles.gui import GUI
+from threading import Thread
 
 class TaxBot(Automation):
     """
@@ -38,20 +39,31 @@ class TaxBot(Automation):
         self.remove_files = remove_files
         self.enable_emailing = enable_emailing
         self.email_partner = email_partner
+        self.take_first_selection = take_first_selection
 
         # Run-Time Variables
         self.year = year
         self.output_folder = output_folder
         self.email_string = email_string
         self.tax_prep_string = tax_prep_string
+        #self.gui = GUI()
 
     def run(self):
+
+        #running_thread = Thread(target=self.running)
+        #running_thread.start()
+        #self.gui.mainloop()
+
+
         """
         Checks the folder to see if there are any tax prep files that have not been stored and sent.
         If there are any it runs the storing and sending process.
         :return: None
         :rtype: None
         """
+
+    def running(self):
+
         if self.store:
             # self.completed_entities = get_csv_to_list()
             infile = open("../sample.pkl", 'rb')
@@ -118,6 +130,7 @@ class TaxBot(Automation):
         self.decrypt_pdf(destination_path, letter_name, sin)
         letter_info = self.get_letter_info(destination_path, letter_name)
         partner = letter_info["partner"]
+        self.gui.update()
 
         # 4. Send the email with attachments
         to_address = "david.watson" + email_string  # "deepak.upadhyaya"
@@ -214,14 +227,15 @@ class TaxBot(Automation):
 
     def get_user_selection(self, sel_list, text):
 
-        response = 0
         self.print_hash_comment("fuzzy match input needed")
         print(text)
-        "   0 - None (stop the bot)\n"
+        print("    0: None (stop the bot)")
         for idx, c_match in enumerate(sel_list):
             print(f"    {idx + 1}: {c_match}")
 
-        response = int(input("Enter Here:  "))
+        response = 1
+        if not self.take_first_selection:
+            response = int(input("Enter Here:  "))
         self.print_hash_comment("####")
         if response == 0:
             raise NotADirectoryError("No valid or close directory")
