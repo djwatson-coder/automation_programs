@@ -47,12 +47,13 @@ class Automation:
     def create_directory(directory):
         Path(directory).mkdir(parents=True, exist_ok=True)
 
-    def get_matching_files(self, path, matching_string):
+    def get_matching_files(self, path, matching_strings):
 
         files = []
         for file in os.listdir(path):
-            if matching_string in file:
-                files.append(file)
+            for string in matching_strings:
+                if string in file:
+                    files.append(file)
 
         return files
 
@@ -67,19 +68,28 @@ class Automation:
                 shutil.copy(os.path.join(path, file), destination)
 
     @staticmethod
-    def send_email(**kwargs):
-        if not kwargs["send"]:
-            return
+    def create_email(**kwargs):
+
+        if not (kwargs["send"] or kwargs["save"]):
+            return False
         outlook = win32com.client.Dispatch('outlook.application')
         mail = outlook.CreateItem(0)
 
         mail.To = kwargs["to_address"]
         mail.Subject = kwargs['subject']
-        # mail.HTMLBody = kwargs['html_body']
-        mail.Body = kwargs['body']
+        mail.HTMLBody = kwargs['html_body']
+        # mail.Body = kwargs['body']
         for attachment in kwargs["attachment_files"]:
             mail.Attachments.Add(kwargs["attachment_file_path"] + "/" + attachment)
-        mail.Send()
+
+        if kwargs["save"]:
+            mail.SaveAs(f'{kwargs["save_path"]}/{kwargs["save_name"]}.msg')
+
+        if kwargs["send"]:
+            mail.Send()
+            return True
+        return False
+
 
     @staticmethod
     def read_out_pdf_list(pdf_list):
@@ -122,7 +132,20 @@ class Automation:
         return 0, False
 
     @staticmethod
-    def print_hash_comment(text):
-        text_length = len(text) + 2
-        hash_length = math.floor((80 - text_length)/2)
-        print(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
+    def print_hash_comment(text=""):
+
+        if text == "":
+            print(80*"#")
+        else:
+            text_length = len(text) + 2
+            hash_length = math.floor((80 - text_length) / 2)
+            print(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
+
+    def create_text_file(self, destination_path, name, **kwargs):
+        """ Creates a text file at the destination_path with the name and kwargs as the text"""
+
+        with open(f'{destination_path}/{name}.txt', 'w') as f:
+            if kwargs["sin"]:
+                f.write(f'SIN: {kwargs["sin"]} \n')
+            if kwargs["path"]:
+                f.write(f'Folder Path: {kwargs["path"]} \n')
