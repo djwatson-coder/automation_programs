@@ -13,6 +13,7 @@ from pikepdf import Pdf
 class Automation:
     def __init__(self):
         self.Name = "name"
+        self.bot_log = ""
 
     def run(self, **kwargs):
         return
@@ -118,9 +119,9 @@ class Automation:
             with Pdf.open(f"{path}/{file}", password=password, allow_overwriting_input=True) as pdf:
                 pdf.save(f"{path}/{file}")
 
-            print("File decrypted Successfully.")
+            self.log_info("File decrypted Successfully.")
         else:
-            print("File already decrypted.")
+            self.log_info("File already decrypted.")
 
     @staticmethod
     def find_first_pattern(text_list, pattern):
@@ -131,15 +132,14 @@ class Automation:
                 return idx, line
         return 0, False
 
-    @staticmethod
-    def print_hash_comment(text=""):
+    def print_hash_comment(self, text=""):
 
         if text == "":
-            print(80*"#")
+            self.log_info(80*"#")
         else:
             text_length = len(text) + 2
             hash_length = math.floor((80 - text_length) / 2)
-            print(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
+            self.log_info(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
 
     def create_text_file(self, destination_path, name, **kwargs):
         """ Creates a text file at the destination_path with the name and kwargs as the text"""
@@ -149,3 +149,9 @@ class Automation:
                 f.write(f'SIN: {kwargs["sin"]} \n')
             if kwargs["path"]:
                 f.write(f'Folder Path: {kwargs["path"]} \n')
+            f.close()
+
+    def log_info(self, text):
+        print(text)
+        self.bot_log = self.bot_log + text + "\n"
+        # save to a log file
