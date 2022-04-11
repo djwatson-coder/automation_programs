@@ -6,11 +6,10 @@
 # ToDo test on 20 Random Samples
 # Nice to have
 # ToDo implement at GUI to replace the console
-
+import sys
 import time
 from datetime import datetime
 from automation import Automation
-import pickle
 from taxbotfiles.tbsettings import *
 
 class TaxBot(Automation):
@@ -20,6 +19,8 @@ class TaxBot(Automation):
     """
     def __init__(self, location="TOR"):
         super().__init__()
+
+        self.location = location
 
         # Paths to Transition files
         if location == "TOR":
@@ -36,7 +37,6 @@ class TaxBot(Automation):
 
         # Storing Data
         self.completed_entities = completed_entities
-        self.store = store
 
         # Run-Time Settings
         self.slp = slp
@@ -60,50 +60,36 @@ class TaxBot(Automation):
         If there are any it runs the storing and sending process.
         """
 
-        if self.store:
-            # self.completed_entities = get_csv_to_list()
-            infile = open("../sample.pkl", 'rb')
-            self.completed_entities = pickle.load(infile)
-            infile.close()
-            outfile = open("../sample.pkl", 'wb')
+        self.log_info(f'\n\n{self.location} Bot Process Starting at: '
+                      f'{time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}\n\n')
         try:
             while True:
-                file = self.check_input_folder(self.tax_prep_string)
+                file = self.check_input_folder([self.tax_prep_string])
                 if file:
                     self.print_hash_comment("Begin TaxBot process")
-                    print(f"File Found: {file}")
+                    self.log_info(f"File Found: {file}")
                     if self.run_process(file):
                         self.completed_entities.append(file)
-                        if store:
-                            # ToDo Add to the PICKLE storage
-                            # store_in_csv()
-                            print("ToDo Add to the pickle storage")
                         self.move_files(self.source_path, self.completed_folder, [file], remove=False)
                         self.print_hash_comment("")
 
                     else:
                         self.move_files(self.source_path, self.issues_folder, [file], True)
                 else:
-                    # wait x seconds
-                    wait_time = 30
-                    print("No New Tax Prep Documents to process")
-                    print(f"Completed Ones: {self.completed_entities}")
-                    print(f"sleeping for {self.slp} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                    time.sleep(wait_time)
-                time.sleep(30)
-
-        except KeyboardInterrupt or Exception:
-            if self.store:
-                # store_in_csv()
-                pickle.dump(self.completed_entities, outfile)
-                outfile.close()
-            raise
+                    self.pause_bot(seconds=self.slp)
+                self.write_to_log()
+        except KeyboardInterrupt as e:
+            self.log_info(repr(e))
+            self.write_to_log()
+            sys.exit()
+        except Exception as e:
+            self.log_info(repr(e))
+            self.write_to_log()
+            sys.exit()
 
     def run_process(self, document):
 
-        # self.save_email(save_path="Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder")
-
-        # 0. Read in the pdf and set the name variables ####
+        # 0. Read in the ID PDF and set the client variables ####
         first_name, last_name, sin, email, client_code = self.read_taxprep_pdf(document)
 
         file_name = f"{last_name}_{first_name.replace(' ', '_')}"
@@ -113,55 +99,41 @@ class TaxBot(Automation):
         # 1. Create destination path: ####
         destination_path, city = self.select_directory(client_folder_path, self.year+2, last_init, self.output_folder)
         if not destination_path:
-            print(f"Can't find the directory for {client_folder_path}")
+            self.log_info(f"Can't find the directory for {client_folder_path}")
             return False
 
-        print(f"Destination path successfully found for {first_name} {last_name}")
+        self.log_info(f"Destination path successfully found for {first_name} {last_name}")
 
         # 2. move the pdf files ####
         files = self.get_matching_files(self.source_path, matching_strings=[file_name])
         if len(files) == 0:
-            print(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
+            self.log_info(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
             return False
 
         self.move_files(self.source_path, destination_path, files, self.remove_files)
-        self.create_text_file(destination_path,
-                              name=sin,
-                              sin=sin,
-                              path=destination_path)
-
-        print(f"FILES MOVED TO: {destination_path}")
+        self.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
+        self.log_info(f"FILES MOVED TO: {destination_path}")
 
         # 3. Decrypt the letter pdf and extract the information
-        letter_name = file_name + f"_1-Ltr_{self.year - 1}.pdf"
+        letter_name = file_name + f"_1-Ltr_{self.year - 1}.pdf"  # ToDo Check this before implementation
         self.decrypt_pdf(destination_path, letter_name, sin)
         letter_info = self.get_letter_info(destination_path, letter_name)
         partner = letter_info["partner"]
 
-        # 4. Send the email with attachments
-        to_address = "david.watson" + email_string  # "deepak.upadhyaya"
-        if self.email_partner:
-            to_address = partner.replace(' ', '.').lower() + email_string
-
+        # 4. Create and Save/Send Email
+        to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
-        # body = self.email_contents
-
         attachment_files = self.get_matching_files(destination_path, matching_strings=["_1-Ltr", "2-T1", "3-Docs"])
 
         email_sent = self.create_email(to_address=to_address,
-                                       subject=subject,
-                                       html_body=html_body,
-                                       # body=body,
-                                       attachment_files=attachment_files,
-                                       attachment_file_path=destination_path,
+                                       subject=subject, html_body=html_body, # body=body,
+                                       attachment_files=attachment_files, attachment_file_path=destination_path,
                                        send=self.enable_emailing,
-                                       save=self.email_saving,
-                                       save_path=destination_path,
-                                       save_name=file_name
+                                       save=self.email_saving, save_path=destination_path, save_name=file_name )
 
-                        )
-        self.print_email_complete(email_sent, first_name=first_name, last_name=last_name, partner=partner)
+        self.print_email_complete(email_sent, to_address=to_address)
+        self.log_info(f"Process Complete for: {first_name} {last_name}")
 
         return True
 
@@ -187,10 +159,10 @@ class TaxBot(Automation):
         printing_place, printing = self.find_first_pattern(text_list, "Printing Options")
         # print(f"Printing ----{text_list[printing_place + 1]}")
 
-        print(f"    Name:{first_name} {last_name}\n"
-              f"    SIN: {sin}\n"
-              f"    Client Code: {client_code}\n"
-              f"    Email: {email}")
+        self.log_info(f"    Name:{first_name} {last_name}\n"
+                      f"    SIN: {sin}\n"
+                      f"    Client Code: {client_code}\n"
+                      f"    Email: {email}")
 
         return first_name, last_name, sin, email, client_code
 
@@ -258,13 +230,11 @@ class TaxBot(Automation):
         partner_line = partner_line.split(' ')
         letter_info = {"partner": f"{partner_line[1]} {partner_line[2].replace(',','')}"}
 
-
         return letter_info
 
-    def check_input_folder(self, matching_string="00"):
-        files = self.get_matching_files(self.source_path, matching_string)
+    def check_input_folder(self, matching_strings):
+        files = self.get_matching_files(self.source_path, matching_strings)
         files_to_process = []
-
         for file in files:
             if file not in self.completed_entities:
                 files_to_process.append(file)
@@ -294,9 +264,28 @@ class TaxBot(Automation):
 
     def print_email_complete(self, email_sent, **kwargs):
         if email_sent:
-            print("EMAIL SENT TO:")
-            print(f"    Partner: {kwargs['partner']} \n"
-                  f"    Email: {kwargs['partner'].replace(' ', '.').lower() + self.email_string}")
-            print(f"Process Complete for: {kwargs['first_name']} {kwargs['last_name']}")
+            self.log_info(f"EMAIL SENT TO: {kwargs['to_address']}")
         else:
-            print("No Email set - setting disabled")
+            self.log_info("No Email set - setting disabled")
+
+    def pause_bot(self, seconds):
+        try:
+            # wait x seconds
+            self.log_info("No New Tax Prep Documents to process")
+            self.log_info(f"Completed Ones: {self.completed_entities}")
+            self.log_info(f"sleeping for {seconds} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            time.sleep(seconds)
+        except KeyboardInterrupt as e:
+            self.log_info(repr(e))
+            self.write_to_log()
+            sys.exit()
+
+    def get_email_address(self, name):
+        if not self.email_partner:
+            name = "david.watson"
+        return name.replace(' ', '.').lower() + email_string
+
+    def write_to_log(self):
+        with open(log_string, 'a') as f:
+            f.write(self.bot_log)
+            f.close()
