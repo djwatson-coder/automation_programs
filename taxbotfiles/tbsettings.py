@@ -20,7 +20,6 @@ vancouver_personal_client_dir = "I:/Vancouver/_Personal Tax - VAN"
 
 
 completed_entities = []  # stored in an Excel file after each iteration
-store = False
 
 tax_prep_string = "00_"
 output_folder = "_FINAL T1 DOCS"
@@ -38,9 +37,11 @@ email_string = "@bakertillywm.com"
 
 # Email contents --
 email_subject = ""  # Implement this
-file = open(f"Email_Contents.txt")
-email_contents = file.read()
-file.close()
+email_file = open(f"Email_Contents.txt")
+email_contents = email_file.read()
+email_file.close()
 
+# Log-File
+log_string = "Bot_Log.txt"
 
 # ToDo Fix the year in the code before deployment
