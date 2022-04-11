@@ -2,6 +2,8 @@
 from settings import automation_program, run_type
 from taxbotfiles.taxbot import TaxBot
 from folderdataentry import FolderDataEntry
+import sys
+
 
 # Select the automation_Script to Run
 def main(**kwargs):
@@ -11,7 +13,7 @@ def main(**kwargs):
         bot.run(points=points)
 
     if automation_program == "TaxBot":
-        bot = TaxBot(location)
+        bot = TaxBot(kwargs["location"])
         bot.run()
 
     return
@@ -19,6 +21,10 @@ def main(**kwargs):
 
 if __name__ == '__main__':
 
-    location = "VAN"
-    main(location=location)
+    if len(sys.argv) > 1:
+        main(location=sys.argv[1])
+    else:
+        main(location="VAN")
+
+
 
