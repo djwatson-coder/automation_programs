@@ -9,12 +9,13 @@ import fitz
 import difflib
 from PyPDF2 import PdfFileReader
 from pikepdf import Pdf
+import sys
 
 
 class Automation:
     def __init__(self):
-        self.Name = "name"
         self.bot_log = ""
+        self.log_string = "Bot_Log.txt"
 
     def run(self, **kwargs):
         return
@@ -151,12 +152,29 @@ class Automation:
                 f.write(f'Folder Path: {kwargs["path"]} \n')
             f.close()
 
+    @staticmethod
+    def read_csv_file(file_path, keep_cols):
+        csv_file = pd.read_csv(file_path)
+        return csv_file[keep_cols]
+
     def log_info(self, text):
         print(text)
         self.bot_log = self.bot_log + text + "\n"
         # save to a log file
 
     @staticmethod
-    def read_csv_file(file_path, keep_cols):
-        csv_file = pd.read_csv(file_path)
-        return csv_file[keep_cols]
+    def create_bot_log():
+        open('Bot_Log.txt', 'a').close()
+        return ""
+
+    def write_to_log(self):
+        with open(self.log_string, 'a') as f:
+            f.write(self.bot_log)
+            f.close()
+        self.bot_log = ""
+
+    def handle_error(self, error, exit_program=False):
+        self.log_info(repr(error))
+        self.write_to_log()
+        if exit_program:
+            sys.exit()
