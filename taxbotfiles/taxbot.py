@@ -6,7 +6,6 @@
 # ToDo test on 20 Random Samples
 # Nice to have
 # ToDo implement at GUI to replace the console
-import sys
 import time
 from datetime import datetime
 from automation import Automation
@@ -65,6 +64,7 @@ class TaxBot(Automation):
         self.log_info(f'\n\n{self.location} Bot Process Starting at: '
                       f'{time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}\n\n')
 
+        # Bot Runs unless there is a keyboard interrupt exception (ctrl + c)
         while True:
             try:
                 file = self.check_input_folder([self.tax_prep_string])
@@ -81,15 +81,20 @@ class TaxBot(Automation):
                 else:
                     self.pause_bot(seconds=self.slp)
                 self.write_to_log()
+
             except KeyboardInterrupt as e:
-                self.log_info(repr(e))
-                self.write_to_log()
-                sys.exit()
+                self.handle_error(e, exit_program=True)
+
+            except IndexError as e:
+                self.log_info(f'Issue with client info file - can not match name')
+                self.log_info(f'File Moved to issues Folder')
+                self.handle_error(e)
+                self.move_files(self.source_path, self.issues_folder, [file], True)
+                time.sleep(5)
 
             except Exception as e:
-                print(e)
-                self.log_info(repr(e))
-                self.write_to_log()
+                self.log_info(f'Error occurred - File Moved to issues Folder')
+                self.handle_error(e)
                 self.move_files(self.source_path, self.issues_folder, [file], True)
                 time.sleep(5)
 
@@ -164,10 +169,8 @@ class TaxBot(Automation):
         # delivery_type_1, delivery_type_2 = self.find_delivery_type(text_list)
         # print(f"Delivery 1: {delivery_type_1}")
         # print(f"Delivery 1: {delivery_type_2}")
-        if email_place == 0:
-            email = "No Email"
-        if client_code_place == 0:
-            client_code = ""
+        email = self.check_for_instance(email_place, email, "No Email")
+        client_code = self.check_for_instance(client_code_place, client_code, "")
         first_name = text_list[sin_place - 2]
         last_name = text_list[sin_place - 1]
         sin = sin.replace(' ', '')
@@ -181,6 +184,12 @@ class TaxBot(Automation):
                       f"    Email: {email}")
 
         return first_name, last_name, sin, email, client_code
+
+    @staticmethod
+    def check_for_instance(check, value, default):
+        if check == 0:
+            return default
+        return value
 
     def select_directory(self, path_name, year, last_init, folder):
 
@@ -228,10 +237,10 @@ class TaxBot(Automation):
     def get_user_selection(self, sel_list, text):
 
         self.print_hash_comment("INPUT NEEDED -- File Location")
-        print(text)
-        print("    0: None (stop the bot)")
+        self.log_info(text)
+        self.log_info("    0: None (stop the bot)")
         for idx, c_match in enumerate(sel_list):
-            print(f"    {idx + 1}: {c_match}")
+            self.log_info(f"    {idx + 1}: {c_match}")
 
         response = 1
         if not self.take_first_selection:
@@ -295,22 +304,15 @@ class TaxBot(Automation):
             self.log_info(f"sleeping for {seconds} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             time.sleep(seconds)
         except KeyboardInterrupt as e:
-            self.log_info(repr(e))
-            self.write_to_log()
-            sys.exit()
+            self.handle_error(e, exit_program=True)
 
     def get_email_address(self, name):
         if not self.email_partner:
             name = "david.watson"
         return name.replace(' ', '.').lower() + email_string
 
-    def write_to_log(self):
-        with open(log_string, 'a') as f:
-            f.write(self.bot_log)
-            f.close()
-
-    def create_client_info(self, client_info_file):
-        df = self.read_csv_file(client_info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
+    def create_client_info(self, info_file):
+        df = self.read_csv_file(info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
         df = df.assign(file_name=lambda x: df['Last Name'] + "_" + df['First Name'])
         df['file_name'] = df['file_name'].replace(' ', '_', regex=True)
         df['SIN'] = df['SIN'].replace(' ', '', regex=True)
