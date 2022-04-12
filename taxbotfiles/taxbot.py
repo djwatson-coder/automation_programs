@@ -289,3 +289,15 @@ class TaxBot(Automation):
         with open(log_string, 'a') as f:
             f.write(self.bot_log)
             f.close()
+
+    def create_client_info(self, client_info_file):
+        df = self.read_csv_file(client_info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
+        df = df.assign(file_name=lambda x: df['Last Name'] + "_" + df['First Name'])
+        df['file_name'] = df['file_name'].replace(' ', '_', regex=True)
+        df['SIN'] = df['SIN'].replace(' ', '', regex=True)
+        return df
+
+    def get_client_sin(self, doc: str):
+        # takes a document string and looks up the client SIN from the folder
+        name = doc.split(tax_prep_string)[0]
+        return self.client_info.loc[self.client_info["file_name"] == name, 'SIN'].iloc[0]
