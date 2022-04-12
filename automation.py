@@ -1,6 +1,7 @@
 import math
 import os
 import re
+import pandas as pd
 from pathlib import Path
 import shutil
 import win32com.client
@@ -43,13 +44,12 @@ class Automation:
 
         return options, close_matches
 
-
     @staticmethod
     def create_directory(directory):
         Path(directory).mkdir(parents=True, exist_ok=True)
 
-    def get_matching_files(self, path, matching_strings):
-
+    @staticmethod
+    def get_matching_files(path, matching_strings):
         files = []
         for file in os.listdir(path):
             for string in matching_strings:
@@ -91,7 +91,6 @@ class Automation:
             return True
         return False
 
-
     @staticmethod
     def read_out_pdf_list(pdf_list):
         for idx, line in enumerate(pdf_list):
@@ -109,7 +108,7 @@ class Automation:
     def decrypt_pdf(self, path, file, password):
 
         if not self.check_directory(path, file):
-            raise NotADirectoryError(f"No File Path for the client at :\n{path}/{file}")
+            raise NotADirectoryError(f"No File Path for the client at : {path}/{file}")
 
         pdf_file = PdfFileReader(f"{path}/{file}")
 
@@ -141,7 +140,8 @@ class Automation:
             hash_length = math.floor((80 - text_length) / 2)
             self.log_info(f"{hash_length * '#'} {text.upper()} {hash_length * '#'}")
 
-    def create_text_file(self, destination_path, name, **kwargs):
+    @staticmethod
+    def create_text_file(destination_path, name, **kwargs):
         """ Creates a text file at the destination_path with the name and kwargs as the text"""
 
         with open(f'{destination_path}/{name}.txt', 'w') as f:
@@ -155,3 +155,8 @@ class Automation:
         print(text)
         self.bot_log = self.bot_log + text + "\n"
         # save to a log file
+
+    @staticmethod
+    def read_csv_file(file_path, keep_cols):
+        csv_file = pd.read_csv(file_path)
+        return csv_file[keep_cols]
