@@ -1,12 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+span { 
+  background-color: yellow;
+  color: black;
+}
+</style>
+</head>
+<body>
 Please find attached your 2021 personal tax package consisting of the following:
 <ul>
- <li>Client Letter:   <u>Please open this letter first</u> and read for important information.</li>
- <li>Tax Return:   Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).</li>
- <li>Documents Requiring Signature:  Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).</li>
+ <li>Client Letter:   <u>Please open this letter first</u> and read for important information.<br><br></li>
+ <li>Tax Return:   Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).<br><br></li>
+ <li>Documents Requiring Signature:  Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).<br><br></li>
   <ul>
-   <li>Form T183 - Sign and date in <em>Part F - Declaration and authorization </em> - sign </li>
-   <li> 2022 Engagement letter - Sign and date </li>
+   <li>Form T183 - Sign and date in <em>Part F - Declaration and authorization </em> - sign <br><br></li>
+   <li> 2022 Engagement letter - Sign and date <br><br></li>
   </ul>
  </li>
- <li> Our invoice for services rendered [Partner/Manager to delete if not applicable] </li>
+ <li> Our invoice for services rendered <span>[Partner/Manager to delete if not applicable]</span> </li>
 </ul>
+</body>
+</html>
