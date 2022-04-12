@@ -1,5 +1,5 @@
 
-from settings import automation_program, run_type
+from settings import automation_program
 from taxbotfiles.taxbot import TaxBot
 from folderdataentry import FolderDataEntry
 import sys
@@ -25,6 +25,3 @@ if __name__ == '__main__':
         main(location=sys.argv[1])
     else:
         main(location="VAN")
-
-
-
