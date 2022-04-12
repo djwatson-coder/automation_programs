@@ -12,6 +12,7 @@ from datetime import datetime
 from automation import Automation
 from taxbotfiles.tbsettings import *
 
+
 class TaxBot(Automation):
     """
     Tax Bot Takes Personal Tax Files, stores the relevant files in the correct client location and
@@ -20,7 +21,8 @@ class TaxBot(Automation):
     def __init__(self, location="TOR"):
         super().__init__()
 
-        self.location = location
+        self.location = location.upper()
+        self.client_info = self.create_client_info(client_info_file)
 
         # Paths to Transition files
         if location == "TOR":
@@ -48,7 +50,7 @@ class TaxBot(Automation):
         self.email_saving = email_saving
 
         # Run-Time Variables
-        self.year = year
+        self.year = yr
         self.output_folder = output_folder
         self.email_string = email_string
         self.tax_prep_string = tax_prep_string
@@ -62,8 +64,9 @@ class TaxBot(Automation):
 
         self.log_info(f'\n\n{self.location} Bot Process Starting at: '
                       f'{time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}\n\n')
-        try:
-            while True:
+
+        while True:
+            try:
                 file = self.check_input_folder([self.tax_prep_string])
                 if file:
                     self.print_hash_comment("Begin TaxBot process")
@@ -74,48 +77,61 @@ class TaxBot(Automation):
                         self.print_hash_comment("")
 
                     else:
-                        self.move_files(self.source_path, self.issues_folder, [file], True)
+                        self.move_files(self.source_path, self.issues_folder, [file], True)  # Make this
                 else:
                     self.pause_bot(seconds=self.slp)
                 self.write_to_log()
-        except KeyboardInterrupt as e:
-            self.log_info(repr(e))
-            self.write_to_log()
-            sys.exit()
-        except Exception as e:
-            self.log_info(repr(e))
-            self.write_to_log()
-            sys.exit()
+            except KeyboardInterrupt as e:
+                self.log_info(repr(e))
+                self.write_to_log()
+                sys.exit()
+
+            except Exception as e:
+                print(e)
+                self.log_info(repr(e))
+                self.write_to_log()
+                self.move_files(self.source_path, self.issues_folder, [file], True)
+                time.sleep(5)
 
     def run_process(self, document):
 
-        # 0. Read in the ID PDF and set the client variables ####
-        first_name, last_name, sin, email, client_code = self.read_taxprep_pdf(document)
+        # 0. decrypt the ID document, Read it in and set the client variables ####
+        sin = self.get_client_sin(document)
+        self.log_info("Decrypting ID File...")
+        self.decrypt_pdf(self.source_path, document, sin)
+        first_name, last_name, sin_pdf, email, client_code = self.read_taxprep_pdf(document)
+
+        self.log_info(f"Sin Matching Correct: {sin == sin_pdf}")
 
         file_name = f"{last_name}_{first_name.replace(' ', '_')}"
         last_init = last_name[0]
-        client_folder_path = f"{last_name}, {first_name.split(' ')[0]}_{client_code}"
+        # client_folder_path = f"{last_name}, {first_name.split(' ')[0]}_{client_code}"
+        client_folder_path = f"{last_name}, {first_name}_{client_code}"
 
-        # 1. Create destination path: ####
+        # 1. Find the destination path based off the clients name and code
         destination_path, city = self.select_directory(client_folder_path, self.year+2, last_init, self.output_folder)
-        if not destination_path:
+        if not destination_path:  # ToDo Check this before implementation
             self.log_info(f"Can't find the directory for {client_folder_path}")
             return False
 
         self.log_info(f"Destination path successfully found for {first_name} {last_name}")
 
-        # 2. move the pdf files ####
+        # 2. Move the PDF Files tha match the client string to the new folder
         files = self.get_matching_files(self.source_path, matching_strings=[file_name])
-        if len(files) == 0:
+        if len(files) <= 1:
             self.log_info(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
             return False
 
         self.move_files(self.source_path, destination_path, files, self.remove_files)
         self.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
         self.log_info(f"FILES MOVED TO: {destination_path}")
+        for idx, file in enumerate(files):
+            self.log_info(f"    {idx}: {file} ")
 
         # 3. Decrypt the letter pdf and extract the information
-        letter_name = file_name + f"_1-Ltr_{self.year - 1}.pdf"  # ToDo Check this before implementation
+        # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
+        letter_name = self.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
+        self.log_info("Decrypting Letter File...")
         self.decrypt_pdf(destination_path, letter_name, sin)
         letter_info = self.get_letter_info(destination_path, letter_name)
         partner = letter_info["partner"]
@@ -124,16 +140,16 @@ class TaxBot(Automation):
         to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
-        attachment_files = self.get_matching_files(destination_path, matching_strings=["_1-Ltr", "2-T1", "3-Docs"])
+        attachment_files = self.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-", "_7-"])
 
-        email_sent = self.create_email(to_address=to_address,
-                                       subject=subject, html_body=html_body, # body=body,
+        email_sent = self.create_email(to_address="",
+                                       subject=subject, html_body=html_body,  # body=body,
                                        attachment_files=attachment_files, attachment_file_path=destination_path,
                                        send=self.enable_emailing,
-                                       save=self.email_saving, save_path=destination_path, save_name=file_name )
+                                       save=self.email_saving, save_path=destination_path, save_name=file_name)
 
         self.print_email_complete(email_sent, to_address=to_address)
-        self.log_info(f"Process Complete for: {first_name} {last_name}")
+        self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         return True
 
@@ -156,7 +172,7 @@ class TaxBot(Automation):
         last_name = text_list[sin_place - 1]
         sin = sin.replace(' ', '')
         # Get All printing Names
-        printing_place, printing = self.find_first_pattern(text_list, "Printing Options")
+        # printing_place, printing = self.find_first_pattern(text_list, "Printing Options")
         # print(f"Printing ----{text_list[printing_place + 1]}")
 
         self.log_info(f"    Name:{first_name} {last_name}\n"
@@ -168,13 +184,16 @@ class TaxBot(Automation):
 
     def select_directory(self, path_name, year, last_init, folder):
 
-        tor_options, tor_close_matches = self.fuzzy_check_directory(f"{self.toronto_personal_client_dir}/"
-                                                                      f"{last_init}", path_name, "Toronto ")
-        van_options, van_close_matches = self.fuzzy_check_directory(f"{self.vancouver_personal_client_dir}/"
-                                                                      f"{last_init}", path_name, "Vancouver ")
-        options = tor_options + van_options
-        close_matches = tor_close_matches + van_close_matches
+        if self.location == "TOR":
+            options, close_matches = self.fuzzy_check_directory(f"{self.toronto_personal_client_dir}/"
+                                                                f"{last_init}", path_name, "Toronto ")
+        else:
+            options, close_matches = self.fuzzy_check_directory(f"{self.vancouver_personal_client_dir}/"
+                                                                f"{last_init}", path_name, "Vancouver ")
+        # options = van_options + tor_options
+        # close_matches = van_close_matches + tor_close_matches
 
+        self.log_info(f"looking for a directory that matches: {path_name}")
         city, city_folder = self.triage_folder_options(options, close_matches)
 
         if city == "Vancouver":
@@ -185,8 +204,8 @@ class TaxBot(Automation):
             self.create_directory(path)
         else:
             raise NotADirectoryError("No File Path for the client at either:\n"
-                            f"{self.toronto_personal_client_dir}/{last_init}/{path_name}\n"
-                            f"{self.vancouver_personal_client_dir}/{last_init}/{path_name}")
+                                     f"{self.toronto_personal_client_dir}/{last_init}/{path_name}\n"
+                                     f"{self.vancouver_personal_client_dir}/{last_init}/{path_name}")
 
         return path, city
 
@@ -245,11 +264,6 @@ class TaxBot(Automation):
             return files_to_process[0]
 
     @staticmethod
-    def move_to_manual_folder(name):
-        files = []
-        # find the files based on the name
-
-    @staticmethod
     def find_delivery_type(text_list):
         breaking_text = "/"
         # correct_types = ["paper", "e-mail", "pdf"]
@@ -266,13 +280,18 @@ class TaxBot(Automation):
         if email_sent:
             self.log_info(f"EMAIL SENT TO: {kwargs['to_address']}")
         else:
-            self.log_info("No Email set - setting disabled")
+            self.log_info("No Email Sent - setting disabled")
+
+        if self.email_saving:
+            self.log_info("Email Saved")
+        else:
+            self.log_info("No Email Saved - setting disabled")
 
     def pause_bot(self, seconds):
         try:
             # wait x seconds
             self.log_info("No New Tax Prep Documents to process")
-            self.log_info(f"Completed Ones: {self.completed_entities}")
+            self.log_info(f"Completed Clients in current instance: {self.completed_entities}")
             self.log_info(f"sleeping for {seconds} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
             time.sleep(seconds)
         except KeyboardInterrupt as e:
