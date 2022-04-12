@@ -2,24 +2,18 @@
 # FILE PATHS ---
 client_info_file = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/David W/T1-Clients-All-Offices.csv"
 
-source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder 2"
-source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder"
+source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test TOR"
+source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test VAN"
 # source_path_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF"
 # source_path_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF"
 
-completed_folder_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder 2/bot-completed"
-issues_folder_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder 2/bot-issues"
-completed_folder_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder/bot-completed"
-issues_folder_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test Folder/bot-issues"
-
-# completed_folder_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF/bot-completed"
-# issues_folder_van = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF/bot-issues"
-# completed_folder_van = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/bot-completed"
-# issues_folder_van = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/bot-issues"
+completed_folder_tor = source_path_tor + "/bot-completed"
+issues_folder_tor = source_path_tor + "/bot-issues"
+completed_folder_van = source_path_van + "/bot-completed"
+issues_folder_van = source_path_van + "/bot-issues"
 
 toronto_personal_client_dir = "I:/Toronto/_Personal Tax - TOR"
 vancouver_personal_client_dir = "I:/Vancouver/_Personal Tax - VAN"
-
 
 completed_entities = []  # stored in an Excel file after each iteration
 
@@ -42,8 +36,5 @@ email_subject = ""  # Implement this
 email_file = open(f"Email_Contents.txt")
 email_contents = email_file.read()
 email_file.close()
-
-# Log-File
-log_string = "Bot_Log.txt"
 
 # ToDo Fix the year in the code before deployment
