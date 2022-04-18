@@ -1,15 +1,14 @@
 
-# Implement before Deployment
-# ToDo robustness checks and exception handling - map out different errors that can happen and how to deal with them
-# ToDo Change the pickle file to a csv file
-# ToDo Add writing to the csv file after every employee has been completed (not on error)
-# ToDo test on 20 Random Samples
-# Nice to have
-# ToDo implement at GUI to replace the console
+""" Tax bot that relocates pdf file from CCH, decrypts documents and creates emails for T1 Clients """
+
 import time
 from datetime import datetime
 from automation import Automation
 from taxbot.settings import *
+from utils import ostools as ost
+from utils.pdfhandler import IdPdfHandler
+from utils import regextools as regt
+from utils import filehandler as fh
 
 
 class TaxBot(Automation):
@@ -22,6 +21,7 @@ class TaxBot(Automation):
 
         self.location = location.upper()
         self.client_info = self.create_client_info(client_info_file)
+        self.pdf_tools = IdPdfHandler()
 
         # Paths to Transition files
         if location == "TOR":
@@ -69,11 +69,11 @@ class TaxBot(Automation):
                     self.pause_bot(2)
                     if self.run_process(file):
                         self.completed_entities.append(file)
-                        self.move_files(self.source_path, self.completed_folder, [file], remove=False)
+                        ost.move_files(self.source_path, self.completed_folder, [file], remove=False)
                         self.print_hash_comment("")
 
                     else:
-                        self.move_files(self.source_path, self.issues_folder, [file], True)  # Make this
+                        ost.move_files(self.source_path, self.issues_folder, [file], True)  # Make this
 
                 except KeyboardInterrupt as e:
                     self.handle_error(e, exit_program=True)
@@ -82,13 +82,13 @@ class TaxBot(Automation):
                     self.log_info(f'Issue with client info file - can not match name')
                     self.log_info(f'File Moved to issues Folder')
                     self.handle_error(e)
-                    self.move_files(self.source_path, self.issues_folder, [file], True)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
                     self.pause_bot(5)
 
                 except Exception as e:
                     self.log_info(f'Error occurred - File Moved to issues Folder')
                     self.handle_error(e)
-                    self.move_files(self.source_path, self.issues_folder, [file], True)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
                     self.pause_bot(5)
             else:
                 self.wait(seconds=self.slp)
@@ -99,41 +99,35 @@ class TaxBot(Automation):
         # 0. decrypt the ID document, Read it in and set the client variables ####
         sin = self.get_client_sin(document)
         self.log_info("Decrypting ID File...")
-        self.decrypt_pdf(self.source_path, document, sin)
-        first_name, last_name, sin_pdf, email, client_code = self.read_id_pdf(document)
-
+        self.pdf_tools.decrypt_pdf(self.source_path, document, sin)
+        first_name, last_name, sin_pdf, email, client_code, file_name, last_init, client_folder_path = \
+            self.pdf_tools.read_id_pdf(self.source_path, document)
         self.log_info(f"Sin Matching Correct: {sin == sin_pdf}")
-
-        file_name = f"{last_name}_{first_name.replace(' ', '_')}"
-        last_init = last_name[0]
-        # client_folder_path = f"{last_name}, {first_name.split(' ')[0]}_{client_code}"
-        client_folder_path = f"{last_name}, {first_name}_{client_code}"
 
         # 1. Find the destination path based off the clients name and code
         destination_path, city = self.select_directory(client_folder_path, self.year+2, last_init, self.output_folder)
         if not destination_path:  # ToDo Check this before implementation
             self.log_info(f"Can't find the directory for {client_folder_path}")
             return False
-
         self.log_info(f"Destination path successfully found for {first_name} {last_name}")
 
         # 2. Move the PDF Files that match the client string to the new folder
-        files = self.get_matching_files(self.source_path, matching_strings=[file_name])
+        files = ost.get_matching_files(self.source_path, matching_strings=[file_name])
         if len(files) <= 1:
             self.log_info(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
             return False
 
-        self.move_files(self.source_path, destination_path, files, self.remove_files)
-        self.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
+        ost.move_files(self.source_path, destination_path, files, self.remove_files)
+        fh.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
         self.log_info(f"FILES MOVED TO: {destination_path}")
         for idx, file in enumerate(files):
             self.log_info(f"    {idx}: {file} ")
 
         # 3. Decrypt the letter pdf and extract the information
         # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
-        letter_name = self.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
+        letter_name = ost.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
         self.log_info("Decrypting Letter File...")
-        self.decrypt_pdf(destination_path, letter_name, sin)
+        self.pdf_tools .decrypt_pdf(destination_path, letter_name, sin)
         letter_info = self.get_letter_info(destination_path, letter_name)
         partner = letter_info["partner"]
 
@@ -141,9 +135,9 @@ class TaxBot(Automation):
         to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
-        attachment_files = self.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-", "_7-"])
+        attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-", "_7-"])
 
-        email_sent = self.create_email(to_address="",
+        email_sent = fh.create_email(to_address="",
                                        subject=subject, html_body=html_body,  # body=body,
                                        attachment_files=attachment_files, attachment_file_path=destination_path,
                                        send=self.enable_emailing,
@@ -153,33 +147,6 @@ class TaxBot(Automation):
         self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         return True
-
-    def read_id_pdf(self, document):
-
-        text_list = self.get_pdf_as_list(f"{self.source_path}/{document}")
-        # self.read_out_pdf_list(text_list)
-        sin_place, sin = self.find_first_pattern(text_list, "[0-9]{3} [0-9]{3} [0-9]{3}")
-        email_place, email = self.find_first_pattern(text_list, "[0-z]*@[0-z]*(.com)")
-        start_spot, a = self.find_first_pattern(text_list, "Client code")
-        client_code_place, client_code = self.find_first_pattern(text_list[start_spot:start_spot + 10], "^[0-9]*$")
-        # delivery_type_1, delivery_type_2 = self.find_delivery_type(text_list)
-        # print(f"Delivery 1: {delivery_type_1}")
-        # print(f"Delivery 1: {delivery_type_2}")
-        email = self.check_for_instance(email_place, email, "No Email")
-        client_code = self.check_for_instance(client_code_place, client_code, "")
-        first_name = text_list[sin_place - 2]
-        last_name = text_list[sin_place - 1]
-        sin = sin.replace(' ', '')
-        # Get All printing Names
-        # printing_place, printing = self.find_first_pattern(text_list, "Printing Options")
-        # print(f"Printing ----{text_list[printing_place + 1]}")
-
-        self.log_info(f"    Name:{first_name} {last_name}\n"
-                      f"    SIN: {sin}\n"
-                      f"    Client Code: {client_code}\n"
-                      f"    Email: {email}")
-
-        return first_name, last_name, sin, email, client_code
 
     @staticmethod
     def check_for_instance(check, value, default):
@@ -191,11 +158,11 @@ class TaxBot(Automation):
 
         if self.location == "TOR":
 
-            options, close_matches = self.fuzzy_check_directory(f"{self.toronto_personal_client_dir}/"
-                                                                f"{last_init}", path_name, "Toronto ")
+            options, close_matches = ost.fuzzy_check_directory(f"{self.toronto_personal_client_dir}/"
+                                                               f"{last_init}", path_name, "Toronto ")
         else:
-            options, close_matches = self.fuzzy_check_directory(f"{self.vancouver_personal_client_dir}/"
-                                                                f"{last_init}", path_name, "Vancouver ")
+            options, close_matches = ost.fuzzy_check_directory(f"{self.vancouver_personal_client_dir}/"
+                                                               f"{last_init}", path_name, "Vancouver ")
         # options = van_options + tor_options
         # close_matches = van_close_matches + tor_close_matches
 
@@ -204,10 +171,10 @@ class TaxBot(Automation):
 
         if city == "Vancouver":
             path = f"{self.vancouver_personal_client_dir}/{last_init}/{city_folder}/{year}/{folder}"
-            self.create_directory(path)
+            ost.create_directory(path)
         elif city == "Toronto":
             path = f"{self.toronto_personal_client_dir}/{last_init}/{city_folder}/{year}/{folder}"
-            self.create_directory(path)
+            ost.create_directory(path)
         else:
             raise NotADirectoryError("No File Path for the client at either:\n"
                                      f"{self.toronto_personal_client_dir}/{last_init}/{path_name}\n"
@@ -249,16 +216,16 @@ class TaxBot(Automation):
             return sel_list[response - 1]
 
     def get_letter_info(self, path, letter_name):
-        text_list = self.get_pdf_as_list(f"{path}/{letter_name}")
+        text_list = self.pdf_tools .get_pdf_as_list(f"{path}/{letter_name}")
         # self.read_out_pdf_list(text_list)
-        idx, partner_line = self.find_first_pattern(text_list, "Per: ")
+        idx, partner_line = regt.find_first_pattern(text_list, "Per: ")
         partner_line = partner_line.split(' ')
         letter_info = {"partner": f"{partner_line[1]} {partner_line[2].replace(',','')}"}
 
         return letter_info
 
     def check_input_folder(self, matching_strings):
-        files = self.get_matching_files(self.source_path, matching_strings)
+        files = ost.get_matching_files(self.source_path, matching_strings)
         files_to_process = []
         for file in files:
             if file not in self.completed_entities:
@@ -314,8 +281,9 @@ class TaxBot(Automation):
             name = "david.watson"
         return name.replace(' ', '.').lower() + email_string
 
-    def create_client_info(self, info_file):
-        df = self.read_csv_file(info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
+    @staticmethod
+    def create_client_info(info_file):
+        df = fh.read_csv_file(info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
         df = df.assign(file_name=lambda x: df['Last Name'] + "_" + df['First Name'])
         df['file_name'] = df['file_name'].replace(' ', '_', regex=True)
         df['SIN'] = df['SIN'].replace(' ', '', regex=True)
@@ -325,3 +293,12 @@ class TaxBot(Automation):
         # takes a document string and looks up the client SIN from the folder
         name = doc.split(tax_prep_string)[0]
         return self.client_info.loc[self.client_info["file_name"] == name, 'SIN'].iloc[0]
+
+
+# Implement before Deployment
+# ToDo robustness checks and exception handling - map out different errors that can happen and how to deal with them
+# ToDo Change the pickle file to a csv file
+# ToDo Add writing to the csv file after every employee has been completed (not on error)
+# ToDo test on 20 Random Samples
+# Nice to have
+# ToDo implement at GUI to replace the console
