@@ -4,7 +4,7 @@
 from PyPDF2 import PdfFileReader
 from pikepdf import Pdf
 import fitz
-import regextools as rt
+import utils.regextools as rt
 
 
 class PdfHandler:
