@@ -138,14 +138,20 @@ class TaxBot(Automation):
 
         # 3. Decrypt the letter pdf and extract the information
         # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
-        letter_name = ost.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
-        self.log_info("Decrypting Letter File...")
-        self.pdf_tools.decrypt_pdf(destination_path, letter_name, sin)
-        letter_info = self.get_letter_info(destination_path, letter_name)
-        partner = letter_info["partner"]
+        # letter_name = ost.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
+        # self.log_info("Decrypting Letter File...")
+        # self.pdf_tools.decrypt_pdf(destination_path, letter_name, sin)
+
+        decrypt_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_4-", "_5-", "_6-", "_7-"])
+        self.log_info("Decrypting Files 1,4,5,6,7...")
+        for file in decrypt_files:
+            self.pdf_tools.decrypt_pdf(destination_path, file, sin)
+
+        # letter_info = self.get_letter_info(destination_path, letter_name)
+        # partner = letter_info["partner"]
 
         # 4. Create and Save/Send Email
-        to_address = self.get_email_address(partner)
+        # to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
         attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-"])
