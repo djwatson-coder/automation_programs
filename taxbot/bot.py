@@ -67,6 +67,7 @@ class TaxBot(Automation):
         # Bot Runs unless there is a keyboard interrupt exception (ctrl + c)
         while True:
             if file := self.check_input_folder([self.tax_prep_string]):
+                self.current_time_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
                 try:
                     self.print_hash_comment("Begin TaxBot process")
                     self.log_info(f"File Found: {file}")
