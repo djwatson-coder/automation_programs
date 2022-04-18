@@ -5,3 +5,4 @@ pypiwin32==223
 pywin32==303
 keyboard==0.13.5
 pynput==1.7.6
+PyMuPDF==1.19.5
