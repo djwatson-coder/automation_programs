@@ -33,10 +33,12 @@ def fuzzy_check_directory(directory, path_to_check, extra_info=""):
 
 
 def create_directory(directory):
+    """ Creates a directory if one does not exist"""
     Path(directory).mkdir(parents=True, exist_ok=True)
 
 
 def get_matching_files(path, matching_strings):
+    """ Gets all the files that match any of a list of strings"""
     files = []
     for file in os.listdir(path):
         for string in matching_strings:
@@ -47,6 +49,7 @@ def get_matching_files(path, matching_strings):
 
 
 def move_files(path, destination, files, remove=False):
+    """ moves or copies files to a destination path"""
     for file in files:
         if os.path.isfile(f"{destination}/{file}"):
             os.remove(f"{destination}/{file}")
