@@ -126,8 +126,8 @@ class TaxBot(Automation):
 
         # 2.a Remove the 00_ document from being moved and add time to the destination path
         files = [x for x in files if self.tax_prep_string not in x]
-        current_time_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
-        destination_path = destination_path + "/" + current_time_date
+
+        destination_path = destination_path + "/" + self.current_time_date
         ost.create_directory(destination_path)
 
         ost.move_files(self.source_path, destination_path, files, self.remove_files)
@@ -140,7 +140,7 @@ class TaxBot(Automation):
         # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
         letter_name = ost.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
         self.log_info("Decrypting Letter File...")
-        self.pdf_tools .decrypt_pdf(destination_path, letter_name, sin)
+        self.pdf_tools.decrypt_pdf(destination_path, letter_name, sin)
         letter_info = self.get_letter_info(destination_path, letter_name)
         partner = letter_info["partner"]
 
@@ -157,7 +157,6 @@ class TaxBot(Automation):
                                      save=self.email_saving, save_path=destination_path, save_name=file_name)
 
         self.print_email_complete(email_sent, to_address=to_address)
-        self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         # 5. Copy the 2_T1 file to the archive and decrypt it
         t1_file = ost.get_matching_files(destination_path, matching_strings=["_2-T1_"])[0]
