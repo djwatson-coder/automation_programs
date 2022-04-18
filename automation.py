@@ -15,7 +15,7 @@ import sys
 class Automation:
     def __init__(self):
         self.bot_log = ""
-        self.log_string = "Bot_Log.txt"
+        self.log_string = "log.txt"
 
     def run(self, **kwargs):
         return
@@ -164,7 +164,7 @@ class Automation:
 
     @staticmethod
     def create_bot_log():
-        open('Bot_Log.txt', 'a').close()
+        open('taxbot/files/log.txt', 'a').close()
         return ""
 
     def write_to_log(self):
