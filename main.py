@@ -1,7 +1,7 @@
 
 from settings import automation_program
-from taxbotfiles.taxbot import TaxBot
-from folderdataentry import FolderDataEntry
+from taxbot.bot import TaxBot
+from dataentry.folderdataentry import FolderDataEntry
 import sys
 
 
