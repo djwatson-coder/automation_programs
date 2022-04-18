@@ -48,13 +48,14 @@ def get_matching_files(path, matching_strings):
     return files
 
 
-def move_files(path, destination, files, remove=False, new_name=False):
+def move_files(path, destination, files, remove=False, new_suffix=False):
     """ moves or copies files to a destination path"""
     for file in files:
         if os.path.isfile(f"{destination}/{file}"):
             os.remove(f"{destination}/{file}")
-        if new_name:
-            destination = destination + "/" + new_name
+        if new_suffix:
+            file_parts = file.split(".")  # Remove the file name and the ext
+            destination = f"{destination}/{file_parts[0]}_{new_suffix}.{file_parts[1]}"
         if remove:
             shutil.move(os.path.join(path, file), destination)
         else:
