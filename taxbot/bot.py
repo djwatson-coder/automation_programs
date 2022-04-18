@@ -210,7 +210,7 @@ class TaxBot(Automation):
             return sel_list[response - 1]
 
     def get_letter_info(self, path, letter_name):
-        text_list = self.pdf_tools .get_pdf_as_list(f"{path}/{letter_name}")
+        text_list = self.pdf_tools.get_pdf_as_list(f"{path}/{letter_name}")
         # self.read_out_pdf_list(text_list)
         idx, partner_line = rt.find_first_pattern(text_list, "Per: ")
         partner_line = partner_line.split(' ')
