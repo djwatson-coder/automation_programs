@@ -34,3 +34,17 @@ tb/__pycache__/tbsettings.cpython-310.pyc
 taxbotfiles/__pycache__/tbsettings.cpython-310.pyc
 __pycache__/keymouse.cpython-310.pyc
 __pycache__/folderdataentry.cpython-310.pyc
+__pycache__/automation.cpython-310.pyc
+__pycache__/automation.cpython-310.pyc
+dataentry/__pycache__/__init__.cpython-310.pyc
+utils/__pycache__/regextools.cpython-310.pyc
+utils/__pycache__/pdfhandler.cpython-310.pyc
+utils/__pycache__/ostools.cpython-310.pyc
+utils/__pycache__/filehandler.cpython-310.pyc
+utils/__pycache__/__init__.cpython-310.pyc
+taxbot/__pycache__/settings.cpython-310.pyc
+taxbot/__pycache__/bot.cpython-310.pyc
+taxbot/__pycache__/__init__.cpython-310.pyc
+dataentry/__pycache__/keymouse.cpython-310.pyc
+dataentry/__pycache__/folderdataentry.cpython-310.pyc
+__pycache__/automation.cpython-310.pyc
