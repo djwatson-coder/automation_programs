@@ -155,8 +155,8 @@ class TaxBot(Automation):
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
         attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-"])
-
-        email_sent = fh.create_email(to_address="",
+        to_address = ""
+        email_sent = fh.create_email(to_address=to_address,
                                      subject=subject, html_body=html_body,  # body=body,
                                      attachment_files=attachment_files, attachment_file_path=destination_path,
                                      send=self.enable_emailing,
