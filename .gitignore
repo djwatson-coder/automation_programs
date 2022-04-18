@@ -48,3 +48,4 @@ taxbot/__pycache__/__init__.cpython-310.pyc
 dataentry/__pycache__/keymouse.cpython-310.pyc
 dataentry/__pycache__/folderdataentry.cpython-310.pyc
 __pycache__/automation.cpython-310.pyc
+.idea/automation.iml
