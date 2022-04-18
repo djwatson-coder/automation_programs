@@ -51,7 +51,7 @@ def get_matching_files(path, matching_strings):
 def move_files(path, destination, files, remove=False, new_suffix=False):
     """ moves or copies files to a destination path"""
     for file in files:
-        if os.path.isfile(f"{destination}/{file}"):
+        if os.path.isfile(f"{destination}/{file}") and not new_suffix:
             os.remove(f"{destination}/{file}")
         if new_suffix:
             file_parts = file.split(".")  # Remove the file name and the ext
