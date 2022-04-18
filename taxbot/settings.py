@@ -2,10 +2,10 @@
 # FILE PATHS ---
 client_info_file = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/David W/T1-Clients-All-Offices.csv"
 
-source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test TOR"
-source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test VAN"
-# source_path_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF"
-# source_path_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF"
+# source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test TOR"
+# source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test VAN"
+source_path_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF/BOT"
+source_path_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/BOT"
 
 completed_folder_tor = source_path_tor + "/bot-completed"
 issues_folder_tor = source_path_tor + "/bot-issues"
