@@ -22,6 +22,7 @@ class TaxBot(Automation):
         self.location = location.upper()
         self.client_info = self.create_client_info(client_info_file)
         self.pdf_tools = IdPdfHandler()
+        self.current_time_date = "{:%Y_%m_%d_%H_%M}".format(datetime.now())
 
         # Paths to Transition files
         if location == "TOR":
@@ -60,7 +61,8 @@ class TaxBot(Automation):
         """ Checks the folder to see if there are any tax prep files that have not been stored and sent. """
 
         self.log_info(f'\n\n{self.location} Bot Process Starting at: '
-                      f'{time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())}\n\n')
+                      f'{time.strftime("%Y-%m-%d %H:%M", time.gmtime())}\n\n')
+
 
         # Bot Runs unless there is a keyboard interrupt exception (ctrl + c)
         while True:
