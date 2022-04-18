@@ -152,8 +152,9 @@ class TaxBot(Automation):
 
         # 4. Create and Save/Send Email
         # to_address = self.get_email_address(partner)
-        subject = f"Tax report for: {first_name.split(' ')[0]}"
-        subject = f"Tax report for: {first_name.split(' ')[0]}"
+        # subject = f"Tax report for: {first_name.split(' ')[0]}"
+        subject = f"{first_name} {last_name} - {self.year} T1 Personal Income Tax Return"
+
         # Elizabeth Dey - 2021 T1 Personal Income Tax Return # ToDO
         html_body = self.email_contents
         attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-"])
