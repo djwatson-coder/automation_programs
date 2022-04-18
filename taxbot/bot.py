@@ -5,10 +5,10 @@ import time
 from datetime import datetime
 from automation import Automation
 from taxbot.settings import *
-from utils import ostools as ost
 from utils.pdfhandler import IdPdfHandler
-from utils import regextools as regt
-from utils import filehandler as fh
+import utils.regextools as rt
+import utils.filehandler as fh
+import utils.ostools as ost
 
 
 class TaxBot(Automation):
@@ -212,7 +212,7 @@ class TaxBot(Automation):
     def get_letter_info(self, path, letter_name):
         text_list = self.pdf_tools .get_pdf_as_list(f"{path}/{letter_name}")
         # self.read_out_pdf_list(text_list)
-        idx, partner_line = regt.find_first_pattern(text_list, "Per: ")
+        idx, partner_line = rt.find_first_pattern(text_list, "Per: ")
         partner_line = partner_line.split(' ')
         letter_info = {"partner": f"{partner_line[1]} {partner_line[2].replace(',','')}"}
 
