@@ -138,21 +138,15 @@ class TaxBot(Automation):
         attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-", "_7-"])
 
         email_sent = fh.create_email(to_address="",
-                                       subject=subject, html_body=html_body,  # body=body,
-                                       attachment_files=attachment_files, attachment_file_path=destination_path,
-                                       send=self.enable_emailing,
-                                       save=self.email_saving, save_path=destination_path, save_name=file_name)
+                                     subject=subject, html_body=html_body,  # body=body,
+                                     attachment_files=attachment_files, attachment_file_path=destination_path,
+                                     send=self.enable_emailing,
+                                     save=self.email_saving, save_path=destination_path, save_name=file_name)
 
         self.print_email_complete(email_sent, to_address=to_address)
         self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         return True
-
-    @staticmethod
-    def check_for_instance(check, value, default):
-        if check == 0:
-            return default
-        return value
 
     def select_directory(self, path_name, year, last_init, folder):
 
