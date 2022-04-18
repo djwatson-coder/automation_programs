@@ -160,12 +160,18 @@ class TaxBot(Automation):
 
         # 5. Copy the 2_T1 file to the archive and decrypt it
         t1_file = ost.get_matching_files(destination_path, matching_strings=["_2-T1_"])[0]
-        self.log_info("Decrypting Letter File...")
+        self.log_info("Moving 2_T1 file to archive")
         if ost.check_directory(self.archive_folder, t1_file):
-            ost.move_files(destination_path, self.archive_folder, t1_file, remove=False, new_name=current_time_date)
+            ost.move_files(destination_path, self.archive_folder, [t1_file], remove=False,
+                           new_suffix=self.current_time_date)
+
+            t1_file = f"{t1_file.split('.')[0]}_{self.current_time_date}.{t1_file.split('.')[1]}"
         else:
-            ost.move_files(destination_path, self.archive_folder, t1_file, remove=False)
+            ost.move_files(destination_path, self.archive_folder, [t1_file], remove=False)
+        self.log_info("Decrypting T1 File...")
         self.pdf_tools.decrypt_pdf(self.archive_folder, t1_file, sin)
+
+        self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         return True
 
