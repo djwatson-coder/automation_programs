@@ -75,4 +75,3 @@ class IdPdfHandler(PdfHandler):
               f"    Email: {email}")
 
         return first_name, last_name, sin, email, client_code, file_name, last_init, client_folder_path
-
