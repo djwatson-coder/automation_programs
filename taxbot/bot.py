@@ -67,11 +67,11 @@ class TaxBot(Automation):
         # Bot Runs unless there is a keyboard interrupt exception (ctrl + c)
         while True:
             if file := self.check_input_folder([self.tax_prep_string]):
-                self.current_time_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+                self.current_time_date = "{:%Y_%m_%d_%H_%M}".format(datetime.now())
                 try:
                     self.print_hash_comment("Begin TaxBot process")
                     self.log_info(f"File Found: {file}")
-                    self.pause_bot(2)
+                    self.pause_bot(60)
                     if self.run_process(file):
                         # self.completed_entities.append(file)
                         ost.move_files(self.source_path, self.completed_folder, [file], remove=True,
@@ -153,6 +153,8 @@ class TaxBot(Automation):
         # 4. Create and Save/Send Email
         # to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
+        subject = f"Tax report for: {first_name.split(' ')[0]}"
+        # Elizabeth Dey - 2021 T1 Personal Income Tax Return # ToDO
         html_body = self.email_contents
         attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-"])
         to_address = ""
