@@ -7,7 +7,7 @@ import sys
 
 
 class Automation:
-    def __init__(self, log_path='taxbot/files/log.txt'):
+    def __init__(self, log_path='files/log.txt'):
         self.bot_log = ""
         self.log_path = log_path
 
