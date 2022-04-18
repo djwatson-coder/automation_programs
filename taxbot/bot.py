@@ -73,12 +73,14 @@ class TaxBot(Automation):
                     self.log_info(f"File Found: {file}")
                     self.pause_bot(2)
                     if self.run_process(file):
-                        self.completed_entities.append(file)
-                        ost.move_files(self.source_path, self.completed_folder, [file], remove=True)
+                        # self.completed_entities.append(file)
+                        ost.move_files(self.source_path, self.completed_folder, [file], remove=True,
+                                       new_suffix=self.current_time_date)
                         self.print_hash_comment("")
 
                     else:
-                        ost.move_files(self.source_path, self.issues_folder, [file], True)  # Make this
+                        ost.move_files(self.source_path, self.issues_folder, [file], remove=True,
+                                       new_suffix=self.current_time_date)  # Make this
 
                 except KeyboardInterrupt as e:
                     self.handle_error(e, exit_program=True)
