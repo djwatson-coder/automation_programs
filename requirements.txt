@@ -1,0 +1,7 @@
+PyPDF2==1.26.0
+pikepdf==5.0.1
+pandas==1.4.2
+pypiwin32==223
+pywin32==303
+keyboard==0.13.5
+pynput==1.7.6
