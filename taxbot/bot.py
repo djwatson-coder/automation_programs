@@ -28,10 +28,12 @@ class TaxBot(Automation):
             self.source_path = source_path_tor
             self.completed_folder = completed_folder_tor
             self.issues_folder = issues_folder_tor
+            self.archive_folder = archive_folder_tor
         else:  # location == "VAN":
             self.source_path = source_path_van
             self.completed_folder = completed_folder_van
             self.issues_folder = issues_folder_van
+            self.archive_folder = archive_folder_van
 
         self.toronto_personal_client_dir = toronto_personal_client_dir
         self.vancouver_personal_client_dir = vancouver_personal_client_dir
@@ -69,7 +71,7 @@ class TaxBot(Automation):
                     self.pause_bot(2)
                     if self.run_process(file):
                         self.completed_entities.append(file)
-                        ost.move_files(self.source_path, self.completed_folder, [file], remove=False)
+                        ost.move_files(self.source_path, self.completed_folder, [file], remove=True)
                         self.print_hash_comment("")
 
                     else:
@@ -78,18 +80,18 @@ class TaxBot(Automation):
                 except KeyboardInterrupt as e:
                     self.handle_error(e, exit_program=True)
 
-                # except IndexError as e:
-                #     self.log_info(f'Issue with client info file - can not match name')
-                #     self.log_info(f'File Moved to issues Folder')
-                #     self.handle_error(e)
-                #     ost.move_files(self.source_path, self.issues_folder, [file], True)
-                #     self.pause_bot(5)
-                #
-                # except Exception as e:
-                #     self.log_info(f'Error occurred - File Moved to issues Folder')
-                #     self.handle_error(e)
-                #     ost.move_files(self.source_path, self.issues_folder, [file], True)
-                #     self.pause_bot(5)
+                except IndexError as e:
+                    self.log_info(f'Issue with client info file - can not match name')
+                    self.log_info(f'File Moved to issues Folder')
+                    self.handle_error(e)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
+
+                except Exception as e:
+                    self.log_info(f'Error occurred - File Moved to issues Folder')
+                    self.handle_error(e)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
             else:
                 self.wait(seconds=self.slp)
             self.write_to_log()
@@ -105,8 +107,8 @@ class TaxBot(Automation):
         self.log_info(f"Sin Matching Correct: {sin == sin_pdf}")
 
         # 1. Find the destination path based off the clients name and code
-        destination_path, city = self.select_directory(client_folder_path, self.year+2, last_init, self.output_folder)
-        if not destination_path:  # ToDo Check this before implementation
+        destination_path, city = self.select_directory(client_folder_path, self.year, last_init, self.output_folder)
+        if not destination_path:
             self.log_info(f"Can't find the directory for {client_folder_path}")
             return False
         self.log_info(f"Destination path successfully found for {first_name} {last_name}")
@@ -117,11 +119,17 @@ class TaxBot(Automation):
             self.log_info(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
             return False
 
+        # 2.a Remove the 00_ document from being moved and add time to the destination path
+        files = [x for x in files if self.tax_prep_string not in x]
+        current_time_date = "{:%Y_%m_%d_%H_%M_%S}".format(datetime.now())
+        destination_path = destination_path + "/" + current_time_date
+        ost.create_directory(destination_path)
+
         ost.move_files(self.source_path, destination_path, files, self.remove_files)
         fh.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
         self.log_info(f"FILES MOVED TO: {destination_path}")
         for idx, file in enumerate(files):
-            self.log_info(f"    {idx}: {file} ")
+            self.log_info(f"    {idx + 1}: {file} ")
 
         # 3. Decrypt the letter pdf and extract the information
         # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
@@ -135,7 +143,7 @@ class TaxBot(Automation):
         to_address = self.get_email_address(partner)
         subject = f"Tax report for: {first_name.split(' ')[0]}"
         html_body = self.email_contents
-        attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-", "_7-"])
+        attachment_files = ost.get_matching_files(destination_path, matching_strings=["_1-", "_2-", "_3-"])
 
         email_sent = fh.create_email(to_address="",
                                      subject=subject, html_body=html_body,  # body=body,
@@ -145,6 +153,15 @@ class TaxBot(Automation):
 
         self.print_email_complete(email_sent, to_address=to_address)
         self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
+
+        # 5. Copy the 2_T1 file to the archive and decrypt it
+        t1_file = ost.get_matching_files(destination_path, matching_strings=["_2-T1_"])[0]
+        self.log_info("Decrypting Letter File...")
+        if ost.check_directory(self.archive_folder, t1_file):
+            ost.move_files(destination_path, self.archive_folder, t1_file, remove=False, new_name=current_time_date)
+        else:
+            ost.move_files(destination_path, self.archive_folder, t1_file, remove=False)
+        self.pdf_tools.decrypt_pdf(self.archive_folder, t1_file, sin)
 
         return True
 

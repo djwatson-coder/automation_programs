@@ -48,12 +48,15 @@ def get_matching_files(path, matching_strings):
     return files
 
 
-def move_files(path, destination, files, remove=False):
+def move_files(path, destination, files, remove=False, new_name=False):
     """ moves or copies files to a destination path"""
     for file in files:
         if os.path.isfile(f"{destination}/{file}"):
             os.remove(f"{destination}/{file}")
+        if new_name:
+            destination = destination + "/" + new_name
         if remove:
             shutil.move(os.path.join(path, file), destination)
         else:
             shutil.copy(os.path.join(path, file), destination)
+

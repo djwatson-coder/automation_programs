@@ -1,16 +1,18 @@
 
 # FILE PATHS ---
 client_info_file = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/David W/T1-Clients-All-Offices.csv"
+archive_folder_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/Archive"
+archive_folder_tor = "//van-fs01/TAXPREP/Toronto/T1/T1-2021/Archive"
 
 # source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test TOR"
 # source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test VAN"
 source_path_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF/BOT"
 source_path_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/BOT"
 
-completed_folder_tor = source_path_tor + "/bot-completed"
-issues_folder_tor = source_path_tor + "/bot-issues"
-completed_folder_van = source_path_van + "/bot-completed"
-issues_folder_van = source_path_van + "/bot-issues"
+completed_folder_tor = source_path_tor + "/BOT-completed"
+issues_folder_tor = source_path_tor + "/BOT-issues"
+completed_folder_van = source_path_van + "/BOT-completed"
+issues_folder_van = source_path_van + "/BOT-issues"
 
 toronto_personal_client_dir = "I:/Toronto/_Personal Tax - TOR"
 vancouver_personal_client_dir = "I:/Vancouver/_Personal Tax - VAN"
@@ -22,7 +24,7 @@ output_folder = "_FINAL T1 DOCS"
 yr = 2021
 
 slp = 30  # length of time to sleep for
-remove_files = False  # Remove the files from the source directory
+remove_files = True  # Remove the files from the source directory
 take_first_selection = True  # Takes the first folder selection instead of asking for user input
 
 # Email Settings --
