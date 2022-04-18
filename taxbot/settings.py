@@ -33,7 +33,7 @@ email_string = "@bakertillywm.com"
 
 # Email contents --
 email_subject = ""  # Implement this
-email_file = open(f"taxbot/files/email.txt")
+email_file = open(f"files/email.txt")
 email_contents = email_file.read()
 email_file.close()
 
