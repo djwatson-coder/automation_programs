@@ -179,6 +179,7 @@ class TaxBot(Automation):
             ost.move_files(destination_path, self.archive_folder, [t1_file], remove=False)
         self.log_info("Decrypting T1 File...")
         self.pdf_tools.decrypt_pdf(self.archive_folder, t1_file, sin)
+        self.create_email_sharefile_folders(destination_path, sin)
 
         self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
@@ -323,6 +324,26 @@ class TaxBot(Automation):
         # takes a document string and looks up the client SIN from the folder
         name = doc.split(tax_prep_string)[0]
         return self.client_info.loc[self.client_info["file_name"] == name, 'SIN'].iloc[0]
+
+    def create_email_sharefile_folders(self, source_path, sin):
+        # CREATE SHAREFILE FOLDER
+        # 1. Create Sharefile folder
+        sharefile_dir = f"{source_path}/Sharefile"
+        ost.create_directory(sharefile_dir)
+        # 2. COPY all pdfs to the Sharefile folder
+        sharefile_files = ost.get_matching_files(source_path, [".pdf"])
+        ost.move_files(source_path, sharefile_dir, list(sharefile_files), remove=False)
+        # 3. unencrypt all documents in the Sharfile folder
+        for file in ost.get_all_files(sharefile_dir):
+            self.pdf_tools.decrypt_pdf(sharefile_dir, file, password=sin)
+
+        # CREATE EMAIL FOLDER
+        # 1. Create Email folder
+        email_dir = f"{source_path}/Email"
+        ost.create_directory(email_dir)
+        # 2. MOVE all pdfs and .msg files to the Email folder
+        email_files = ost.get_matching_files(source_path, [".pdf", ".msg"])
+        ost.move_files(source_path, email_dir, list(email_files), remove=True)
 
 
 # Implement before Deployment
