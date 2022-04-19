@@ -48,6 +48,11 @@ def get_matching_files(path, matching_strings):
     return files
 
 
+def get_all_files(path):
+    """ Gets all the files that match any of a list of strings"""
+    return [file for file in os.listdir(path)]
+
+
 def move_files(path, destination, files, remove=False, new_suffix=False):
     """ moves or copies files to a destination path"""
     for file in files:
