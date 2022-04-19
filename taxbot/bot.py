@@ -206,6 +206,8 @@ class TaxBot(Automation):
             path = f"{self.toronto_personal_client_dir}/{last_init}/{city_folder}/{year}/{folder}"
             ost.create_directory(path)
         else:
+            print(city)
+            print(city_folder)
             raise NotADirectoryError("No File Path for the client at either:\n"
                                      f"{self.toronto_personal_client_dir}/{last_init}/{path_name}\n"
                                      f"{self.vancouver_personal_client_dir}/{last_init}/{path_name}")
