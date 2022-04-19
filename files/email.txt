@@ -20,9 +20,9 @@ Please find attached your 2021 personal tax package consisting of the following:
  <li>Tax Return:   Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).<br><br></li>
  <li>Documents Requiring Signature:  Password protected with the taxpayer's 9 digit Social Insurance Number (no dashes or spaces).<br><br></li>
   <ul>
-   <li>Form T183 - Sign and date in <em>Part F - Declaration and authorization </em> - sign </li>
-   <li>2022 Engagement letter - Sign and date </li>
-   <li>Joint Election to Split Pension Income for 2021 - both taxpayer and spouse sign page 4 </li>
+   <li>Form T183 - Sign and date in <em>Part F - Declaration and authorization </em> - sign page 1</li>
+   <li>2022 Engagement letter - Sign and date on page 6</li>
+   <li>Joint Election to Split Pension Income for 2021 - both taxpayer and spouse sign page 4</li>
    <li>Remittance Payment Voucher - please retain for payment at financial institution or pay online <span class="redcolour">(if applicable)</span></li>
    <li>To send your return to CRA, we have attached page 8 of the tax return that requires a physical signature. 
        Please print this document, sign and email back. We will then print and send the return to CRA via post. <br><br></li>
