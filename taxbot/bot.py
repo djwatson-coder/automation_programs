@@ -71,7 +71,7 @@ class TaxBot(Automation):
                 try:
                     self.print_hash_comment("Begin TaxBot process")
                     self.log_info(f"File Found: {file}")
-                    self.pause_bot(60)
+                    self.pause_bot(10) # 60
                     if self.run_process(file):
                         # self.completed_entities.append(file)
                         ost.move_files(self.source_path, self.completed_folder, [file], remove=True,
