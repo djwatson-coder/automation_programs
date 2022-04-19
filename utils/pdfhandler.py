@@ -61,8 +61,8 @@ class IdPdfHandler(PdfHandler):
 
         email = rt.check_for_instance(email_place, email, "No Email")
         client_code = rt.check_for_instance(client_code_place, client_code, "")
-        first_name = text_list[sin_place - 2]
-        last_name = text_list[sin_place - 1]
+        first_name = text_list[sin_place - 2].title()
+        last_name = text_list[sin_place - 1].title()
         sin = sin.replace(' ', '')
 
         file_name = f"{last_name}_{first_name.replace(' ', '_')}"
