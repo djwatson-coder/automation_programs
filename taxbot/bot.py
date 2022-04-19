@@ -71,7 +71,7 @@ class TaxBot(Automation):
                 try:
                     self.print_hash_comment("Begin TaxBot process")
                     self.log_info(f"File Found: {file}")
-                    self.pause_bot(10) # 60
+                    self.pause_bot(60)
                     if self.run_process(file):
                         # self.completed_entities.append(file)
                         ost.move_files(self.source_path, self.completed_folder, [file], remove=True,
@@ -85,18 +85,18 @@ class TaxBot(Automation):
                 except KeyboardInterrupt as e:
                     self.handle_error(e, exit_program=True)
 
-                # except IndexError as e:
-                #     self.log_info(f'Issue with client info file - can not match name')
-                #     self.log_info(f'File Moved to issues Folder')
-                #     self.handle_error(e)
-                #     ost.move_files(self.source_path, self.issues_folder, [file], True)
-                #     self.pause_bot(5)
-                #
-                # except Exception as e:
-                #     self.log_info(f'Error occurred - File Moved to issues Folder')
-                #     self.handle_error(e)
-                #     ost.move_files(self.source_path, self.issues_folder, [file], True)
-                #     self.pause_bot(5)
+                except IndexError as e:
+                    self.log_info(f'Issue with client info file - can not match name')
+                    self.log_info(f'File Moved to issues Folder')
+                    self.handle_error(e)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
+
+                except Exception as e:
+                    self.log_info(f'Error occurred - File Moved to issues Folder')
+                    self.handle_error(e)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
             else:
                 self.wait(seconds=self.slp)
             self.write_to_log()
