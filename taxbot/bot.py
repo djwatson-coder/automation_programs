@@ -299,9 +299,9 @@ class TaxBot(Automation):
     def wait(self, seconds):
         try:
             # wait x seconds
-            self.log_info("No New Tax Prep Documents to process")
-            self.log_info(f"Completed Clients in current instance: {self.completed_entities}")
-            self.log_info(f"sleeping for {seconds} seconds....{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            sleep_string = f"sleeping for {seconds} seconds. TIME: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            self.log_info(f"No New Tax Prep Documents to process: {sleep_string}")
+            # self.log_info(f"Completed Clients in current instance: {self.completed_entities}")
             time.sleep(seconds)
         except KeyboardInterrupt as e:
             self.handle_error(e, exit_program=True)
