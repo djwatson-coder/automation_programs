@@ -322,12 +322,13 @@ class TaxBot(Automation):
         df = fh.read_csv_file(info_file, keep_cols=['First Name', 'Last Name', 'SIN'])
         df = df.assign(file_name=lambda x: df['Last Name'] + "_" + df['First Name'])
         df['file_name'] = df['file_name'].replace(' ', '_', regex=True)
+        df['file_name'] = df['file_name'].str.lower()
         df['SIN'] = df['SIN'].replace(' ', '', regex=True)
         return df
 
     def get_client_sin(self, doc: str):
         # takes a document string and looks up the client SIN from the folder
-        name = doc.split(tax_prep_string)[0]
+        name = doc.split(tax_prep_string)[0].lower()
         return self.client_info.loc[self.client_info["file_name"] == name, 'SIN'].iloc[0]
 
     def create_email_sharefile_folders(self, source_path, sin):
