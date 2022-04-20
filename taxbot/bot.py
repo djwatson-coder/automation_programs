@@ -63,7 +63,6 @@ class TaxBot(Automation):
         self.log_info(f'\n\n{self.location} Bot Process Starting at: '
                       f'{time.strftime("%Y-%m-%d %H:%M", time.gmtime())}\n\n')
 
-
         # Bot Runs unless there is a keyboard interrupt exception (ctrl + c)
         while True:
             if file := self.check_input_folder([self.tax_prep_string]):
@@ -112,6 +111,7 @@ class TaxBot(Automation):
         self.log_info(f"Sin Matching Correct: {sin == sin_pdf}")
 
         # 1. Find the destination path based off the clients name and code
+        self.log_info("\n STEP 1 - Find the Destination Path")
         destination_path, city = self.select_directory(client_folder_path, self.year, last_init, self.output_folder)
         if not destination_path:
             self.log_info(f"Can't find the directory for {client_folder_path}")
@@ -119,6 +119,7 @@ class TaxBot(Automation):
         self.log_info(f"Destination path successfully found for {first_name} {last_name}")
 
         # 2. Move the PDF Files that match the client string to the new folder
+        self.log_info("\n STEP 2 - Move the PDF Files")
         files = ost.get_matching_files(self.source_path, matching_strings=[file_name])
         if len(files) <= 1:
             self.log_info(f"-- COULD NOT FIND ANY FILES FOR {first_name} {last_name}")
@@ -137,6 +138,7 @@ class TaxBot(Automation):
             self.log_info(f"    {idx + 1}: {file} ")
 
         # 3. Decrypt the letter pdf and extract the information
+        self.log_info("\n STEP 3 - Decrypting Files")
         # letter_name = file_name + f"_1-Ltr_{self.year-1}.pdf"  # ToDo Check this before implementation
         # letter_name = ost.get_matching_files(destination_path, matching_strings=["_1-Ltr_"])[0]
         # self.log_info("Decrypting Letter File...")
@@ -151,6 +153,7 @@ class TaxBot(Automation):
         # partner = letter_info["partner"]
 
         # 4. Create and Save/Send Email
+        self.log_info("\n STEP 4 - Create and Save the Email")
         # to_address = self.get_email_address(partner)
         # subject = f"Tax report for: {first_name.split(' ')[0]}"
         subject = f"{first_name} {last_name} - {self.year} T1 Personal Income Tax Return"
@@ -168,6 +171,7 @@ class TaxBot(Automation):
         self.print_email_complete(email_sent, to_address=to_address)
 
         # 5. Copy the 2_T1 file to the archive and decrypt it
+        self.log_info("\n STEP 5 - Copy T1 to the archive folder")
         t1_file = ost.get_matching_files(destination_path, matching_strings=["_2-T1_"])[0]
         self.log_info("Moving 2_T1 file to archive")
         if ost.check_directory(self.archive_folder, t1_file):
@@ -179,8 +183,9 @@ class TaxBot(Automation):
             ost.move_files(destination_path, self.archive_folder, [t1_file], remove=False)
         self.log_info("Decrypting T1 File...")
         self.pdf_tools.decrypt_pdf(self.archive_folder, t1_file, sin)
-        self.create_email_sharefile_folders(destination_path, sin)
 
+        self.log_info("\n STEP 6 - Create the Sharefile and Email folders")
+        self.create_email_sharefile_folders(destination_path, sin)
         self.log_info(f"TAXBOT PROCESS SUCCESSFULLY COMPLETED FOR: {first_name} {last_name}")
 
         return True
@@ -330,20 +335,25 @@ class TaxBot(Automation):
         # 1. Create Sharefile folder
         sharefile_dir = f"{source_path}/Sharefile"
         ost.create_directory(sharefile_dir)
+
         # 2. COPY all pdfs to the Sharefile folder
         sharefile_files = ost.get_matching_files(source_path, [".pdf"])
         ost.move_files(source_path, sharefile_dir, list(sharefile_files), remove=False)
+
         # 3. unencrypt all documents in the Sharfile folder
         for file in ost.get_all_files(sharefile_dir):
             self.pdf_tools.decrypt_pdf(sharefile_dir, file, password=sin)
+        self.log_info("Sharefile Folder Created")
 
         # CREATE EMAIL FOLDER
         # 1. Create Email folder
         email_dir = f"{source_path}/Email"
         ost.create_directory(email_dir)
+
         # 2. MOVE all pdfs and .msg files to the Email folder
         email_files = ost.get_matching_files(source_path, [".pdf", ".msg"])
         ost.move_files(source_path, email_dir, list(email_files), remove=True)
+        self.log_info("Email Folder Created")
 
 
 # Implement before Deployment

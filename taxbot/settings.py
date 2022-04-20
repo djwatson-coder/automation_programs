@@ -4,8 +4,6 @@ client_info_file = "//tor-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/David W/T1-Clien
 archive_folder_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/Archive"
 archive_folder_tor = "//van-fs01/TAXPREP/Toronto/T1/T1-2021/Archive"
 
-# source_path_tor = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test TOR"
-# source_path_van = "Q:/Admin - Digital Technology and Risk Advisory/Tax Bot/Tax Test/Test VAN"
 source_path_tor = "//tor-fs01/TAXPREP/Toronto/T1/T1-2021/PDF/BOT"
 source_path_van = "//van-fs01/TAXPREP/Vancouver/T1/T1-2021/PDF/BOT"
 

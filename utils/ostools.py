@@ -59,8 +59,8 @@ def move_files(path, destination, files, remove=False, new_suffix=False):
         if os.path.isfile(f"{destination}/{file}") and not new_suffix:
             os.remove(f"{destination}/{file}")
         if new_suffix:
-            file_parts = file.split(".")  # Remove the file name and the ext
-            destination = f"{destination}/{file_parts[0]}_{new_suffix}.{file_parts[1]}"
+            file_parts = file.split(".pdf")  # Remove the file name and the ext
+            destination = f"{destination}/{file_parts[0]}_{new_suffix}.pdf"
         if remove:
             shutil.move(os.path.join(path, file), destination)
         else:
