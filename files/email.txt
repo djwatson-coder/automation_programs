@@ -26,8 +26,8 @@ Please find attached your 2021 personal tax package consisting of the following:
    <li>Form 2091 - Designation of a property as a principal residence by an individual - sign on page <span class="yellowhighlight">x</span></li>
    <li>Form T1A - Request for loss carry-back - Sign in Certification section on page <span class="yellowhighlight">x </span></li>
    <li>CRA Authorization - sign on page <span class="yellowhighlight">x</span></li>
-   <li>Revenu Québec online filing authorization- sign on page <span class="yellowhighlight">x</span></li>
-   <li>Remittance Payment Voucher - please retain for payment at financial institution or pay online <span class="redcolour">(if applicable)</span></li>
+   <li>Revenu Qu&eacute;bec online filing authorization- sign on page <span class="yellowhighlight">x</span></li>
+   <li>Remittance Payment Voucher - please retain for payment at financial institution or pay online <em><span class="redcolour">(if applicable)</span></em></li>
    <li>2022 Engagement letter - Sign and date on page <span class="yellowhighlight">x</span></li>
    <li>To send your return to CRA, we have attached page <span class="yellowhighlight">x</span> of the tax return that requires a physical signature.
        Please print this document, sign and email back. We will then print and send the return to CRA via post. <br><br></li>
