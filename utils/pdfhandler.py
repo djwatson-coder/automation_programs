@@ -65,7 +65,7 @@ class IdPdfHandler(PdfHandler):
         last_name = text_list[sin_place - 1]
         sin = sin.replace(' ', '')
 
-        file_name = f"{last_name}_{first_name.replace(' ', '_')}"
+        file_name = f"{last_name.replace(' ', '_')}_{first_name.replace(' ', '_')}"
         last_init = last_name[0]
         client_folder_path = f"{last_name.title()}, {first_name.title()}_{client_code}"
 
