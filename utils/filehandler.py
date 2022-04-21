@@ -16,6 +16,12 @@ def create_text_file(destination_path, name, **kwargs):
         f.close()
 
 
+def create_gen_tf(destination_path, name, body=""):
+    with open(f'{destination_path}/{name}.txt', 'w') as f:
+        f.write(body)
+
+
+
 def read_csv_file(file_path, keep_cols):
     csv_file = pd.read_csv(file_path)
     return csv_file[keep_cols]

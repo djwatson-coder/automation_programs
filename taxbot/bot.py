@@ -105,6 +105,11 @@ class TaxBot(Automation):
         # 0. decrypt the ID document, Read it in and set the client variables ####
         sin = self.get_client_sin(document)
         self.log_info("Decrypting ID File...")
+        if not self.pdf_tools.check_if_encrypted(self.source_path, document):
+            self.log_info(f"00 File is not encrypted")
+            fh.create_gen_tf(self.source_path, name=f"{document} was unencrypted",
+                             body="Please encrypt all files in Taxprep then re-run :)")
+            return False
         self.pdf_tools.decrypt_pdf(self.source_path, document, sin)
         first_name, last_name, sin_pdf, email, client_code, file_name, last_init, client_folder_path = \
             self.pdf_tools.read_id_pdf(self.source_path, document)

@@ -43,6 +43,11 @@ class PdfHandler:
         for idx, line in enumerate(pdf_list):
             print(f"{idx}: {line}")
 
+    @staticmethod
+    def check_if_encrypted(path, file):
+        pdf_file = PdfFileReader(f"{path}/{file}")
+        return pdf_file.isEncrypted
+
 
 class IdPdfHandler(PdfHandler):
     def __init__(self):
