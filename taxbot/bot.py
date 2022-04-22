@@ -111,7 +111,7 @@ class TaxBot(Automation):
                              body="Please encrypt all files in Taxprep then re-run :)")
             return False
         self.pdf_tools.decrypt_pdf(self.source_path, document, sin)
-        first_name, last_name, sin_pdf, email, client_code, file_name, last_init, client_folder_path = \
+        first_name, last_name, sin_pdf, email, client_code, file_name, last_init, client_folder_path, delivery_type = \
             self.pdf_tools.read_id_pdf(self.source_path, document)
         self.log_info(f"Sin Matching Correct: {sin == sin_pdf}")
 
@@ -137,7 +137,7 @@ class TaxBot(Automation):
         ost.create_directory(destination_path)
 
         ost.move_files(self.source_path, destination_path, files, self.remove_files)
-        fh.create_text_file(destination_path, name=sin, sin=sin, path=destination_path)
+        fh.create_text_file(destination_path, name=f"{sin}{delivery_type}", sin=sin, path=destination_path)
         self.log_info(f"FILES MOVED TO: {destination_path}")
         for idx, file in enumerate(files):
             self.log_info(f"    {idx + 1}: {file} ")
