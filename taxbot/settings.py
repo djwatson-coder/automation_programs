@@ -21,7 +21,7 @@ tax_prep_string = "_00-ID"
 output_folder = "_FINAL T1 DOCS"
 yr = 2021
 
-slp = 20  # length of time to sleep for
+slp = 15  # length of time to sleep for
 remove_files = True  # Remove the files from the source directory
 take_first_selection = True  # Takes the first folder selection instead of asking for user input
 
