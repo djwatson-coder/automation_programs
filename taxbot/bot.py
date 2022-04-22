@@ -277,19 +277,6 @@ class TaxBot(Automation):
         else:
             return files_to_process[0]
 
-    @staticmethod
-    def find_delivery_type(text_list):
-        breaking_text = "/"
-        # correct_types = ["paper", "e-mail", "pdf"]
-        correct_types = ['"ab"-email', 'pape']
-        for idx, line in enumerate(text_list):
-            if breaking_text in line:
-                del_types = line.split(breaking_text)
-                print(del_types)
-                if del_types[0].lower() in correct_types and del_types[1].lower() in correct_types:
-                    return del_types[0], del_types[1]
-        return False, False
-
     def print_email_complete(self, email_sent, **kwargs):
         if email_sent:
             self.log_info(f"EMAIL SENT TO: {kwargs['to_address']}")
