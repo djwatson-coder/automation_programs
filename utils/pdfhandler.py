@@ -52,6 +52,8 @@ class PdfHandler:
 class IdPdfHandler(PdfHandler):
     def __init__(self):
         super(IdPdfHandler, self).__init__()
+        self.breaking_text = "/"
+        self.correct_types = ["efile", "pdf", "paper", "sharefile"]
         pass
 
     def read_id_pdf(self, path, document):
@@ -63,6 +65,7 @@ class IdPdfHandler(PdfHandler):
         email_place, email = rt.find_first_pattern(text_list, "[0-z]*@[0-z]*(.com)")
         start_spot, a = rt.find_first_pattern(text_list, "Client code")
         client_code_place, client_code = rt.find_first_pattern(text_list[start_spot:start_spot + 10], "^[0-9]*$")
+        delivery_type = self.find_delivery_type(text_list[:40], self.breaking_text, self.correct_types)
 
         email = rt.check_for_instance(email_place, email, "No Email")
         client_code = rt.check_for_instance(client_code_place, client_code, "")
@@ -77,6 +80,19 @@ class IdPdfHandler(PdfHandler):
         print(f"    Name:{first_name} {last_name}\n"
               f"    SIN: {sin}\n"
               f"    Client Code: {client_code}\n"
-              f"    Email: {email}")
+              f"    Email: {email}\n"
+              f"    Delivery Type: {delivery_type}\n")
 
-        return first_name, last_name, sin, email, client_code, file_name, last_init, client_folder_path
+        return first_name, last_name, sin, email, client_code, file_name, last_init, client_folder_path, delivery_type
+
+    @staticmethod
+    def find_delivery_type(text_list, breaking_text, correct_types):
+        for idx, line in enumerate(text_list):
+            if breaking_text in line:
+                del_type = line.split(breaking_text)
+                print(del_type)
+                del_type_1 = del_type[0].strip().lower()
+                del_type_2 = del_type[1].strip().lower()
+                if del_type_1 in correct_types and del_type_2 in correct_types:
+                    return f"_{del_type_1}_{del_type_2}"
+        return ""
