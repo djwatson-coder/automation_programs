@@ -66,3 +66,6 @@ def move_files(path, destination, files, remove=False, new_suffix=False):
         else:
             shutil.copy(os.path.join(path, file), destination)
 
+
+def check_if_file_exists(path, file):
+    return os.path.isfile(f"{path}/{file}")
