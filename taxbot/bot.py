@@ -91,6 +91,18 @@ class TaxBot(Automation):
                     ost.move_files(self.source_path, self.issues_folder, [file], True)
                     self.pause_bot(5)
 
+                except NotEncryptedError as e:
+                    self.log_info(f"00 File is not encrypted")
+                    if ost.check_if_file_exists(self.source_path, file):
+                        ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
+
+                except NotADirectoryError as e:
+                    self.log_info(f'Error occurred - File Moved to issues Folder')
+                    self.handle_error(e)
+                    ost.move_files(self.source_path, self.issues_folder, [file], True)
+                    self.pause_bot(5)
+
                 except Exception as e:
                     self.log_info(f'Error occurred - File Moved to issues Folder')
                     self.handle_error(e)
@@ -106,10 +118,9 @@ class TaxBot(Automation):
         sin = self.get_client_sin(document)
         self.log_info("Decrypting ID File...")
         if not self.pdf_tools.check_if_encrypted(self.source_path, document):
-            self.log_info(f"00 File is not encrypted")
             fh.create_gen_tf(self.source_path, name=f"Encryption Issue-{document.split('_00')[0]}-ID",
                              body="The 00 file was not encrypted. Please encrypt all files in Taxprep then re-run :)")
-            return False
+            raise NotEncryptedError
         self.pdf_tools.decrypt_pdf(self.source_path, document, sin)
         first_name, last_name, sin_pdf, email, client_code, file_name, last_init, client_folder_path, delivery_type = \
             self.pdf_tools.read_id_pdf(self.source_path, document)
@@ -120,7 +131,7 @@ class TaxBot(Automation):
         destination_path, city = self.select_directory(client_folder_path, self.year, last_init, self.output_folder)
         if not destination_path:
             self.log_info(f"Can't find the directory for {client_folder_path}")
-            return False
+            raise NotADirectoryError
         self.log_info(f"Destination path successfully found for {first_name} {last_name}")
 
         # 2. Move the PDF Files that match the client string to the new folder
@@ -356,3 +367,7 @@ class TaxBot(Automation):
 # ToDo test on 20 Random Samples
 # Nice to have
 # ToDo implement at GUI to replace the console
+
+
+class NotEncryptedError(Exception):
+    pass
