@@ -17,3 +17,7 @@ def check_for_instance(check, value, default):
     if check == 0:
         return default
     return value
+
+
+def find_all(pattern, text):
+    return re.findall(pattern, text)
