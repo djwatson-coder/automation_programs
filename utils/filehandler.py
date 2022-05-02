@@ -21,7 +21,6 @@ def create_gen_tf(destination_path, name, body=""):
         f.write(body)
 
 
-
 def read_csv_file(file_path, keep_cols):
     csv_file = pd.read_csv(file_path)
     return csv_file[keep_cols]
@@ -48,3 +47,14 @@ def create_email(**kwargs):
         mail.Send()
         return True
     return False
+
+
+def read_text_file(path: str):
+    with open(path) as f:
+        lines = f.readlines()
+        f.close()
+        return lines
+
+
+def write_excel(path, df):
+    df.to_excel(path, index=False)
